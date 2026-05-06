@@ -1,0 +1,44 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "二手车交易平台",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/sell/sell",
+			"style": {
+				"navigationBarTitleText": "发布",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "二手车交易平台",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F8FAFC",
+		"app-plus": {
+			"background": "#efeff4"
+		}
+	},
+	"uniIdRouter": {},
+	"mp-weixin": {
+		"appid": "",
+		"setting": {
+			"urlCheck": false
+		},
+		"usingComponents": true,
+		"permission": {
+			"scope.userLocation": {
+				"desc": "您的位置信息将用于小程序位置接口的效果展示"
+			}
+		}
+	}
+}

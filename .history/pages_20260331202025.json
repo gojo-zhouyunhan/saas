@@ -1,0 +1,98 @@
+{
+	"pages": [
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/login/phonelogin",
+			"style": {
+				"navigationBarTitleText": "手机验证码登录",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/register/register",
+			"style": {
+				"navigationBarTitleText": "注册",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "二手车交易平台",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/sell/sell",
+			"style": {
+				"navigationBarTitleText": "发布",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/message/message",
+			"style": {
+				"navigationBarTitleText": "消息",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		},
+		{
+			"path": "pages/location/location",
+			"style": {
+				"navigationBarTitleText": "本地",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black",
+				"backgroundColor": "#F8FAFC"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "二手车交易平台",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F8FAFC",
+		"app-plus": {
+			"background": "#efeff4"
+		}
+	},
+	"uniIdRouter": {},
+	"mp-weixin": {
+		"appid": "",
+		"setting": {
+			"urlCheck": false
+		},
+		"usingComponents": true,
+		"permission": {
+			"scope.userLocation": {
+				"desc": "您的位置信息将用于小程序位置接口的效果展示"
+			}
+		}
+	}
+}
