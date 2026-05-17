@@ -1,30 +1,34 @@
-﻿<template>
+<template>
   <view class="page">
     <view class="hero">
       <view class="hero-copy">
         <view class="recommend-head">
-          <text class="section-title">附近推荐</text>
-          <text class="section-subtitle">结合当前位置，智能推荐周边优质车源</text>
-        </view>
+        <text class="section-title">附近推荐</text>
+        <text class="section-subtitle">结合当前区域筛选的精选车源</text>
       </view>
+      </view>
+
     </view>
 
     <view class="location-card">
       <view class="location-card-head">
         <view class="location-badge">
-          <uni-icons type="location-filled" size="22" color="#0b3c5d"></uni-icons>
+          <view class="pin-icon">
+            <view class="pin-drop"></view>
+            <view class="pin-hole"></view>
+          </view>
         </view>
         <view class="location-copy">
           <text class="location-label">当前位置</text>
           <text class="location-value">{{ displayLocation }}</text>
+                <button class="refresh-btn" @click="getLocation">刷新定位</button>
         </view>
-        <button class="refresh-btn" @click="getLocation">刷新定位</button>
       </view>
 
       <view class="meta-row">
         <view class="meta-pill">
           <text class="meta-dot"></text>
-          <text class="meta-pill-text">{{ hasLocation ? '定位已同步' : '等待定位' }}</text>
+          <text class="meta-pill-text">{{ latitude && longitude ? '定位已同步' : '等待定位' }}</text>
         </view>
         <view class="meta-pill soft">
           <text class="meta-pill-text">周边车源智能推荐</text>
@@ -33,17 +37,32 @@
 
       <view class="action-row">
         <button class="primary-btn" @click="chooseLocation">
+          <view class="btn-icon">
+            <view class="map-fold left"></view>
+            <view class="map-fold middle"></view>
+            <view class="map-fold right"></view>
+          </view>
           <text class="btn-text light">地图选点</text>
+        </button>
+        <button class="secondary-btn" @click="submitLocation">
+          <view class="btn-icon">
+            <view class="save-frame"></view>
+            <view class="save-slot"></view>
+            <view class="save-tab"></view>
+          </view>
+          <text class="btn-text">保存位置</text>
         </button>
       </view>
     </view>
 
+     
+
     <view class="masonry">
       <view class="masonry-column left-column">
         <view
+          class="car-card"
           v-for="(car, index) in leftCars"
           :key="car.id"
-          class="car-card"
           :class="index === 0 ? 'top-offset' : ''"
           @click="viewCarDetail(car)"
         >
@@ -56,7 +75,7 @@
             <text class="name">{{ car.name }}</text>
             <text class="seller">{{ car.seller }}</text>
             <view class="card-foot">
-              <text class="price">{{ car.price }}万</text>
+              <text class="price">¥{{ car.price }}万</text>
               <text class="detail-link">查看详情</text>
             </view>
           </view>
@@ -65,9 +84,9 @@
 
       <view class="masonry-column right-column">
         <view
+          class="car-card"
           v-for="car in rightCars"
           :key="car.id"
-          class="car-card"
           @click="viewCarDetail(car)"
         >
           <image class="thumb image-short" :src="car.image" mode="aspectFill"></image>
@@ -79,7 +98,7 @@
             <text class="name">{{ car.name }}</text>
             <text class="seller">{{ car.seller }}</text>
             <view class="card-foot">
-              <text class="price">{{ car.price }}万</text>
+              <text class="price">¥{{ car.price }}万</text>
               <text class="detail-link">查看详情</text>
             </view>
           </view>
@@ -107,7 +126,7 @@ const DEFAULT_LOCATION = {
 const EMPTY_LOCATION_TEXT = '暂无定位信息'
 const LOCATION_CACHE_KEY = 'currentLocationCache'
 const LOCATION_CACHE_TTL = 30 * 60 * 1000
-const MUNICIPALITIES = ['北京市', '上海市', '天津市', '重庆市']
+const DEFAULT_LOCATION_CACHE_TTL = 5 * 60 * 1000
 
 export default {
   components: {
@@ -118,7 +137,7 @@ export default {
       carList: [
         {
           id: 1,
-          name: '丰田卡罗拉 2020款 豪华版',
+          name: '丰田卡罗拉 2020款 双擎精英版',
           price: '12.8',
           seller: '认证车商',
           image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400'
@@ -139,7 +158,7 @@ export default {
         },
         {
           id: 4,
-          name: '宝马3系 2020款 325Li M运动套装',
+          name: '宝马 3系 2020款 325Li M运动套装',
           price: '28.5',
           seller: '认证旗舰店',
           image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400'
@@ -150,13 +169,10 @@ export default {
       district: DEFAULT_LOCATION.district,
       latitude: DEFAULT_LOCATION.latitude,
       longitude: DEFAULT_LOCATION.longitude,
-      userId: ''
+      userId: 1
     }
   },
   computed: {
-    hasLocation() {
-      return this.latitude !== null && this.longitude !== null
-    },
     displayLocation() {
       const parts = [this.province, this.city, this.district]
         .filter(Boolean)
@@ -182,29 +198,13 @@ export default {
       })
     },
     initLocation() {
-      this.userId = this.getCurrentUserId()
-      this.applyCachedLocation()
-      this.getLocation({
-        silent: true,
-        syncToServer: true
-      })
-    },
-    getCurrentUserId() {
-      const storedUser = uni.getStorageSync('user')
-      if (!storedUser) {
-        return ''
+      if (this.applyCachedLocation()) {
+        return
       }
 
-      try {
-        const parsedUser = typeof storedUser === 'string' ? JSON.parse(storedUser) : storedUser
-        const user = parsedUser.user || parsedUser.userInfo || parsedUser || {}
-        return user.userId || user.id || user.uid || user.number || user.userNo || ''
-      } catch (error) {
-        return ''
-      }
+      this.getLocation()
     },
-    getLocation(options = {}) {
-      const { silent = false, syncToServer = false } = options
+    getLocation() {
       uni.getLocation({
         type: 'gcj02',
         geocode: true,
@@ -213,12 +213,10 @@ export default {
           this.longitude = res.longitude
           this.applyLocatedAddress(res)
           this.cacheLocation()
-          if (syncToServer) {
-            this.submitLocation({ silentSuccess: silent })
-          }
         },
         fail: () => {
           this.useDefaultLocation()
+          this.cacheLocation(DEFAULT_LOCATION_CACHE_TTL)
           uni.showModal({
             title: '定位失败',
             content: '无法自动获取当前位置，请手动选择位置。当前已默认定位到北京市。',
@@ -285,7 +283,8 @@ export default {
         return city
       }
 
-      if (MUNICIPALITIES.includes(province)) {
+      const municipalities = ['北京市', '上海市', '天津市', '重庆市']
+      if (municipalities.includes(province)) {
         return province
       }
 
@@ -347,7 +346,6 @@ export default {
           this.city = locationName || this.city || DEFAULT_LOCATION.city
           this.district = locationAddress && locationAddress !== locationName ? locationAddress : ''
           this.cacheLocation()
-          this.submitLocation()
         },
         fail: () => {
           uni.showToast({
@@ -357,42 +355,31 @@ export default {
         }
       })
     },
-    submitLocation(options = {}) {
-      const { silentSuccess = false } = options
-      if (!this.userId) {
-        this.userId = this.getCurrentUserId()
-      }
-
-      if (!this.userId) {
-        uni.showToast({
-          title: '璇峰厛鐧诲綍',
-          icon: 'none'
-        })
-        return
-      }
-
+    submitLocation() {
       if (this.displayLocation === EMPTY_LOCATION_TEXT) {
         uni.showToast({
-          title: '璇峰厛鑾峰彇瀹氫綅',
+          title: '请先获取定位',
           icon: 'none'
         })
         return
       }
 
       request({
-        url: '/api/user/nearby-address',
+        url: '/api/user/save-location',
         method: 'POST',
         data: {
           userId: this.userId,
-          nearbyAddress: this.displayLocation
+          province: this.province,
+          city: this.city,
+          district: this.district,
+          latitude: this.latitude,
+          longitude: this.longitude
         },
         success: () => {
-          if (!silentSuccess) {
-            uni.showToast({
-              title: '位置已保存',
-              icon: 'success'
-            })
-          }
+          uni.showToast({
+            title: '位置已保存',
+            icon: 'success'
+          })
         },
         fail: () => {
           uni.showToast({
@@ -409,7 +396,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  padding: 0 24rpx 210rpx;
+  padding: calc(26rpx + var(--status-bar-height)) 24rpx 210rpx;
   background:
     radial-gradient(circle at top left, rgba(230, 240, 246, 0.95) 0, rgba(230, 240, 246, 0) 32%),
     linear-gradient(180deg, #f7fafc 0%, var(--c-bg) 100%);
@@ -420,40 +407,56 @@ export default {
   align-items: flex-start;
   justify-content: space-between;
   gap: 20rpx;
-  margin: 0 -24rpx;
-  padding: var(--nav-pt) var(--nav-px) var(--nav-pb);
-  background: var(--c-nav);
+  padding: 10rpx 4rpx 0;
 }
 
 .hero-copy {
   flex: 1;
 }
 
-.recommend-head {
-  width: 100%;
-  background: transparent;
+.hero-eyebrow {
+  display: inline-block;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(230, 240, 246, 0.96);
+  color: var(--c-primary);
+  font-size: 22rpx;
+  font-weight: 600;
 }
 
-.recommend-head .section-title {
-  color: #ffffff;
-}
-
-.recommend-head .section-subtitle {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.section-title {
+.hero-title {
   display: block;
-  font-size: 32rpx;
+  margin-top: 18rpx;
+  font-size: 42rpx;
+  line-height: 1.24;
   font-weight: 700;
   color: var(--c-text);
 }
 
-.section-subtitle {
+.hero-subtitle {
   display: block;
-  margin-top: 8rpx;
-  font-size: 22rpx;
-  color: var(--c-muted);
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--c-text-2);
+}
+
+.refresh-btn {
+  margin: 0;
+  padding: 0 22rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--c-primary);
+  font-size: 24rpx;
+  font-weight: 600;
+  box-shadow: 0 10rpx 24rpx rgba(15, 23, 42, 0.06);
+}
+
+.refresh-btn::after {
+  border: 1rpx solid rgba(11, 60, 93, 0.08);
+  border-radius: 20rpx;
 }
 
 .location-card {
@@ -473,12 +476,38 @@ export default {
 .location-badge {
   width: 84rpx;
   height: 84rpx;
-  flex-shrink: 0;
   border-radius: 24rpx;
   background: linear-gradient(180deg, #eef6fb 0%, #dbe9f3 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.pin-icon {
+  position: relative;
+  width: 34rpx;
+  height: 38rpx;
+}
+
+.pin-drop {
+  position: absolute;
+  left: 6rpx;
+  top: 2rpx;
+  width: 22rpx;
+  height: 22rpx;
+  border: 4rpx solid var(--c-primary);
+  border-radius: 22rpx 22rpx 22rpx 4rpx;
+  transform: rotate(-45deg);
+}
+
+.pin-hole {
+  position: absolute;
+  left: 14rpx;
+  top: 11rpx;
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 999rpx;
+  background: var(--c-primary);
 }
 
 .location-copy {
@@ -500,25 +529,6 @@ export default {
   color: var(--c-text);
   font-weight: 600;
   word-break: break-word;
-}
-
-.refresh-btn {
-  margin: 0;
-  padding: 0 22rpx;
-  height: 72rpx;
-  line-height: 72rpx;
-  flex-shrink: 0;
-  border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--c-primary);
-  font-size: 24rpx;
-  font-weight: 600;
-  box-shadow: 0 10rpx 24rpx rgba(15, 23, 42, 0.06);
-}
-
-.refresh-btn::after {
-  border: 1rpx solid rgba(11, 60, 93, 0.08);
-  border-radius: 20rpx;
 }
 
 .meta-row {
@@ -560,13 +570,15 @@ export default {
   margin-top: 28rpx;
 }
 
-.primary-btn {
+.primary-btn,
+.secondary-btn {
   flex: 1;
   height: 92rpx;
   border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 14rpx;
   padding: 0;
 }
 
@@ -575,7 +587,12 @@ export default {
   box-shadow: 0 14rpx 24rpx rgba(11, 60, 93, 0.18);
 }
 
-.primary-btn::after {
+.secondary-btn {
+  background: linear-gradient(180deg, #eff6fb 0%, #e3eef6 100%);
+}
+
+.primary-btn::after,
+.secondary-btn::after {
   border: none;
 }
 
@@ -587,6 +604,110 @@ export default {
 
 .btn-text.light {
   color: #ffffff;
+}
+
+.btn-icon {
+  position: relative;
+  width: 30rpx;
+  height: 30rpx;
+}
+
+.map-fold {
+  position: absolute;
+  top: 4rpx;
+  width: 9rpx;
+  height: 22rpx;
+  border: 3rpx solid #ffffff;
+  border-radius: 3rpx;
+}
+
+.map-fold.left {
+  left: 0;
+  transform: skewY(8deg);
+}
+
+.map-fold.middle {
+  left: 10rpx;
+  transform: skewY(-8deg);
+}
+
+.map-fold.right {
+  left: 20rpx;
+  transform: skewY(8deg);
+}
+
+.save-frame {
+  position: absolute;
+  inset: 2rpx;
+  border: 3rpx solid var(--c-primary);
+  border-radius: 6rpx;
+}
+
+.save-slot {
+  position: absolute;
+  left: 8rpx;
+  top: 6rpx;
+  width: 14rpx;
+  height: 7rpx;
+  border-radius: 2rpx;
+  background: var(--c-primary);
+}
+
+.save-tab {
+  position: absolute;
+  left: 9rpx;
+  bottom: 6rpx;
+  width: 12rpx;
+  height: 7rpx;
+  border-radius: 2rpx;
+  background: rgba(11, 60, 93, 0.16);
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-top: 30rpx;
+  margin-bottom: 22rpx;
+  padding: 0 6rpx;
+}
+
+.recommend-head {
+  padding: 14rpx 18rpx;
+  border-radius: 22rpx;
+  background: rgba(0, 0, 0, 0.92);
+}
+
+.recommend-head .section-title {
+  color: #ffffff;
+}
+
+.recommend-head .section-subtitle {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.section-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.section-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--c-muted);
+}
+
+.section-chip {
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--c-primary);
+  font-size: 22rpx;
+  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.04);
 }
 
 .masonry {

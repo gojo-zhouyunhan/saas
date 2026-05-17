@@ -154,7 +154,7 @@ export default {
 }
 
 .header {
-  padding: calc(24rpx + var(--status-bar-height)) 30rpx 24rpx;
+  padding: var(--nav-pt) var(--nav-px) var(--nav-pb);
   background: var(--c-nav);
 }
 

@@ -26,19 +26,19 @@
           <text class="function-name">我的车辆</text>
           <text class="function-arrow">›</text>
         </view>
-        <view class="function-item" @click="goToDrafts">
-          <text class="function-name">草稿箱</text>
-          <text class="function-arrow">›</text>
-        </view>
         <view class="function-item" @click="goToMyOrders">
           <text class="function-name">我的订单</text>
+          <text class="function-arrow">›</text>
+        </view>
+        <view class="function-item" @click="goToFavorites">
+          <text class="function-name">我的收藏</text>
           <text class="function-arrow">›</text>
         </view>
       </view>
 
       <view class="function-section">
-        <view class="function-item" @click="goToFavorites">
-          <text class="function-name">我的收藏</text>
+        <view class="function-item" @click="goToCoupons">
+          <text class="function-name">优惠券</text>
           <text class="function-arrow">›</text>
         </view>
         <view class="function-item" @click="goToPoints">
@@ -74,12 +74,15 @@
 <script>
 import BottomNav from '../../components/BottomNav.vue'
 import { request } from '../../utils/api'
-import { openPage } from '../../utils/navigation'
 
 export default {
-  components: { BottomNav },
+  components: {
+    BottomNav
+  },
   data() {
-    return { userInfo: {} }
+    return {
+      userInfo: {}
+    }
   },
   computed: {
     displayName() {
@@ -89,7 +92,7 @@ export default {
     userNumber() {
       const user = this.userInfo || {}
       const id = user.userId || user.id || user.number || user.userNo || user.uid
-      return id ? `编号：${id}` : '编号：-'
+      return id ? `编号：${id}` : '编号：--'
     },
     memberLevel() {
       const user = this.userInfo || {}
@@ -110,6 +113,7 @@ export default {
         this.userInfo = {}
         return
       }
+
       try {
         const parsedUser = typeof storedUser === 'string' ? JSON.parse(storedUser) : storedUser
         this.userInfo = parsedUser.user || parsedUser.userInfo || parsedUser
@@ -118,36 +122,38 @@ export default {
       }
     },
     goToSetting() {
-      uni.showToast({ title: '设置页开发中', icon: 'none' })
+      uni.showToast({ title: '跳转到设置页面', icon: 'none' })
     },
     goToMyCars() {
-      uni.showToast({ title: '我的车辆页开发中', icon: 'none' })
-    },
-    goToDrafts() {
-      openPage('/pages/profile/drafts')
+      uni.showToast({ title: '跳转到我的车辆页面', icon: 'none' })
     },
     goToMyOrders() {
-      uni.showToast({ title: '我的订单页开发中', icon: 'none' })
+      uni.showToast({ title: '跳转到我的订单页面', icon: 'none' })
     },
     goToFavorites() {
-      uni.showToast({ title: '我的收藏页开发中', icon: 'none' })
+      uni.showToast({ title: '跳转到我的收藏页面', icon: 'none' })
+    },
+    goToCoupons() {
+      uni.showToast({ title: '跳转到优惠券页面', icon: 'none' })
     },
     goToPoints() {
-      uni.showToast({ title: '我的积分页开发中', icon: 'none' })
+      uni.showToast({ title: '跳转到我的积分页面', icon: 'none' })
     },
     goToHelp() {
-      uni.showToast({ title: '帮助中心页开发中', icon: 'none' })
+      uni.showToast({ title: '跳转到帮助中心页面', icon: 'none' })
     },
     goToFeedback() {
-      uni.showToast({ title: '意见反馈页开发中', icon: 'none' })
+      uni.showToast({ title: '跳转到意见反馈页面', icon: 'none' })
     },
     goToAbout() {
-      uni.showToast({ title: '关于我们页开发中', icon: 'none' })
+      uni.showToast({ title: '跳转到关于我们页面', icon: 'none' })
     },
     clearLoginState() {
       uni.removeStorageSync('token')
       uni.removeStorageSync('user')
-      uni.reLaunch({ url: '/pages/login/login' })
+      uni.reLaunch({
+        url: '/pages/login/login'
+      })
     },
     logout() {
       const token = uni.getStorageSync('token')
@@ -155,18 +161,22 @@ export default {
         uni.showToast({ title: '未登录', icon: 'none' })
         return
       }
+
       uni.showModal({
         title: '确认退出登录',
-        content: '退出后需要重新登录。',
+        content: '退出后需要重新登录',
         confirmText: '退出',
         success: (res) => {
           if (!res.confirm) {
             return
           }
+
           request({
             url: '/api/user/unlogin',
             method: 'POST',
-            complete: () => this.clearLoginState()
+            complete: () => {
+              this.clearLoginState()
+            }
           })
         }
       })
@@ -176,24 +186,137 @@ export default {
 </script>
 
 <style scoped>
-.container { min-height: 100vh; padding-bottom: 180rpx; background: var(--c-bg); }
-.nav-bar { background-color: var(--c-nav); }
-.nav-top { display: flex; justify-content: space-between; align-items: center; padding: var(--nav-pt) var(--nav-px) var(--nav-pb); }
-.nav-title { font-size: 32rpx; font-weight: 600; color: var(--c-nav-text); }
-.nav-setting { font-size: 28rpx; color: rgba(255, 255, 255, 0.85); }
-.user-info { display: flex; align-items: center; padding: 40rpx 30rpx; background-color: var(--c-surface); margin: 24rpx; border-radius: 24rpx; box-shadow: var(--shadow-sm); }
-.avatar { width: 120rpx; height: 120rpx; border-radius: 50%; overflow: hidden; flex: 0 0 120rpx; margin-right: 24rpx; }
-.avatar image { width: 100%; height: 100%; }
-.user-details { flex: 1; min-width: 0; }
-.user-name { display: block; font-size: 36rpx; font-weight: 700; color: var(--c-text); margin-bottom: 8rpx; }
-.user-id { display: block; font-size: 24rpx; color: var(--c-muted-2); }
-.user-level { padding: 10rpx 20rpx; background: var(--gradient-primary); border-radius: 20rpx; }
-.level-text { font-size: 22rpx; color: #fff; }
-.function-list { padding: 0 24rpx; }
-.function-section { background-color: var(--c-surface); border-radius: 20rpx; margin-bottom: 24rpx; overflow: hidden; box-shadow: var(--shadow-sm); }
-.function-item { display: flex; align-items: center; padding: 28rpx; border-bottom: 1rpx solid rgba(0, 0, 0, 0.04); }
-.function-item:last-child { border-bottom: none; }
-.function-name { flex: 1; font-size: 30rpx; color: var(--c-text); }
-.function-arrow { font-size: 32rpx; color: #cbd5e1; }
-.logout-text { color: #dc2626; }
+.container {
+  min-height: 100vh;
+  padding-bottom: 180rpx;
+  background: var(--c-bg);
+}
+
+.nav-bar {
+  background-color: var(--c-nav);
+}
+
+.nav-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(20rpx + var(--status-bar-height)) 30rpx 20rpx;
+}
+
+.nav-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--c-nav-text);
+}
+
+.nav-setting {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 30rpx;
+  background-color: var(--c-surface);
+  margin: 24rpx 24rpx 24rpx;
+  border-radius: 24rpx;
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: 0 0 120rpx;
+  margin-right: 24rpx;
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.user-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--c-text);
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-id {
+  display: block;
+  font-size: 24rpx;
+  color: var(--c-muted-2);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-level {
+  padding: 10rpx 20rpx;
+  background: var(--gradient-primary);
+  border-radius: 20rpx;
+  flex: 0 0 auto;
+}
+
+.level-text {
+  font-size: 22rpx;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.function-list {
+  padding: 0 24rpx;
+}
+
+.function-section {
+  background-color: var(--c-surface);
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.function-item {
+  display: flex;
+  align-items: center;
+  padding: 28rpx;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.04);
+}
+
+.function-item:last-child {
+  border-bottom: none;
+}
+
+.function-name {
+  flex: 1;
+  font-size: 30rpx;
+  color: var(--c-text);
+}
+
+.function-arrow {
+  font-size: 32rpx;
+  color: #cbd5e1;
+  font-weight: 300;
+}
+
+.logout-text {
+  color: #dc2626;
+}
 </style>

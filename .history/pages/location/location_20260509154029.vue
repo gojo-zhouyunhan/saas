@@ -3,8 +3,8 @@
     <view class="hero">
       <view class="hero-copy">
         <view class="recommend-head">
-          <text class="section-title">附近推荐</text>
-          <text class="section-subtitle">结合当前位置，智能推荐周边优质车源</text>
+          <text class="section-title">闄勮繎鎺ㄨ崘</text>
+          <text class="section-subtitle">缁撳悎褰撳墠浣嶇疆锛屾櫤鑳芥帹鑽愬懆杈逛紭璐ㄨ溅婧?/text>
         </view>
       </view>
     </view>
@@ -15,25 +15,25 @@
           <uni-icons type="location-filled" size="22" color="#0b3c5d"></uni-icons>
         </view>
         <view class="location-copy">
-          <text class="location-label">当前位置</text>
+          <text class="location-label">褰撳墠浣嶇疆</text>
           <text class="location-value">{{ displayLocation }}</text>
         </view>
-        <button class="refresh-btn" @click="getLocation">刷新定位</button>
+        <button class="refresh-btn" @click="getLocation">鍒锋柊瀹氫綅</button>
       </view>
 
       <view class="meta-row">
         <view class="meta-pill">
           <text class="meta-dot"></text>
-          <text class="meta-pill-text">{{ hasLocation ? '定位已同步' : '等待定位' }}</text>
+          <text class="meta-pill-text">{{ hasLocation ? '瀹氫綅宸插悓姝? : '绛夊緟瀹氫綅' }}</text>
         </view>
         <view class="meta-pill soft">
-          <text class="meta-pill-text">周边车源智能推荐</text>
+          <text class="meta-pill-text">鍛ㄨ竟杞︽簮鏅鸿兘鎺ㄨ崘</text>
         </view>
       </view>
 
       <view class="action-row">
         <button class="primary-btn" @click="chooseLocation">
-          <text class="btn-text light">地图选点</text>
+          <text class="btn-text light">鍦板浘閫夌偣</text>
         </button>
       </view>
     </view>
@@ -50,14 +50,14 @@
           <image class="thumb image-tall" :src="car.image" mode="aspectFill"></image>
           <view class="card-body">
             <view class="tag-row">
-              <text class="tag">严选</text>
-              <text class="tag soft">同城可看</text>
+              <text class="tag">涓ラ€?/text>
+              <text class="tag soft">鍚屽煄鍙湅</text>
             </view>
             <text class="name">{{ car.name }}</text>
             <text class="seller">{{ car.seller }}</text>
             <view class="card-foot">
-              <text class="price">{{ car.price }}万</text>
-              <text class="detail-link">查看详情</text>
+              <text class="price">{{ car.price }}涓?/text>
+              <text class="detail-link">鏌ョ湅璇︽儏</text>
             </view>
           </view>
         </view>
@@ -73,14 +73,14 @@
           <image class="thumb image-short" :src="car.image" mode="aspectFill"></image>
           <view class="card-body">
             <view class="tag-row">
-              <text class="tag">严选</text>
-              <text class="tag soft">同城可看</text>
+              <text class="tag">涓ラ€?/text>
+              <text class="tag soft">鍚屽煄鍙湅</text>
             </view>
             <text class="name">{{ car.name }}</text>
             <text class="seller">{{ car.seller }}</text>
             <view class="card-foot">
-              <text class="price">{{ car.price }}万</text>
-              <text class="detail-link">查看详情</text>
+              <text class="price">{{ car.price }}涓?/text>
+              <text class="detail-link">鏌ョ湅璇︽儏</text>
             </view>
           </view>
         </view>
@@ -97,17 +97,17 @@ import { request } from '../../utils/api'
 import { chooseLocationCompat } from '../../utils/platform'
 
 const DEFAULT_LOCATION = {
-  province: '中国',
-  city: '北京市',
+  province: '涓浗',
+  city: '鍖椾含甯?,
   district: '',
   latitude: null,
   longitude: null
 }
 
-const EMPTY_LOCATION_TEXT = '暂无定位信息'
+const EMPTY_LOCATION_TEXT = '鏆傛棤瀹氫綅淇℃伅'
 const LOCATION_CACHE_KEY = 'currentLocationCache'
 const LOCATION_CACHE_TTL = 30 * 60 * 1000
-const MUNICIPALITIES = ['北京市', '上海市', '天津市', '重庆市']
+const MUNICIPALITIES = ['鍖椾含甯?, '涓婃捣甯?, '澶╂触甯?, '閲嶅簡甯?]
 
 export default {
   components: {
@@ -118,30 +118,30 @@ export default {
       carList: [
         {
           id: 1,
-          name: '丰田卡罗拉 2020款 豪华版',
+          name: '涓扮敯鍗＄綏鎷?2020娆?鍙屾搸绮捐嫳鐗?,
           price: '12.8',
-          seller: '认证车商',
+          seller: '璁よ瘉杞﹀晢',
           image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400'
         },
         {
           id: 2,
-          name: '本田思域 2019款 220TURBO 劲动版',
+          name: '鏈敯鎬濆煙 2019娆?220TURBO 鍔插姩鐗?,
           price: '11.5',
-          seller: '个人卖家',
+          seller: '涓汉鍗栧',
           image: 'https://images.unsplash.com/photo-1605816988066-b0a0ce0a166a?w=400'
         },
         {
           id: 3,
-          name: '大众帕萨特 2021款 330TSI 豪华版',
+          name: '澶т紬甯曡惃鐗?2021娆?330TSI 璞崕鐗?,
           price: '16.8',
-          seller: '城市精品车行',
+          seller: '鍩庡競绮惧搧杞﹁',
           image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400'
         },
         {
           id: 4,
-          name: '宝马3系 2020款 325Li M运动套装',
+          name: '瀹濋┈3绯?2020娆?325Li M杩愬姩濂楄',
           price: '28.5',
-          seller: '认证旗舰店',
+          seller: '璁よ瘉鏃楄埌搴?,
           image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400'
         }
       ],
@@ -160,7 +160,7 @@ export default {
     displayLocation() {
       const parts = [this.province, this.city, this.district]
         .filter(Boolean)
-        .filter((part, index) => !(index === 0 && part === '中国'))
+        .filter((part, index) => !(index === 0 && part === '涓浗'))
 
       return parts.join(' ') || EMPTY_LOCATION_TEXT
     },
@@ -220,10 +220,10 @@ export default {
         fail: () => {
           this.useDefaultLocation()
           uni.showModal({
-            title: '定位失败',
-            content: '无法自动获取当前位置，请手动选择位置。当前已默认定位到北京市。',
-            confirmText: '手动定位',
-            cancelText: '稍后再说',
+            title: '瀹氫綅澶辫触',
+            content: '鏃犳硶鑷姩鑾峰彇褰撳墠浣嶇疆锛岃鎵嬪姩閫夋嫨浣嶇疆銆傚綋鍓嶅凡榛樿瀹氫綅鍒板寳浜競銆?,
+            confirmText: '鎵嬪姩瀹氫綅',
+            cancelText: '绋嶅悗鍐嶈',
             success: (res) => {
               if (res.confirm) {
                 this.chooseLocation()
@@ -323,7 +323,7 @@ export default {
       )
 
       this.province = province || ''
-      this.city = city || fallbackText || '当前位置'
+      this.city = city || fallbackText || '褰撳墠浣嶇疆'
       this.district = city && fallbackText === city ? district : district || fallbackText || ''
     },
     useDefaultLocation() {
@@ -338,7 +338,7 @@ export default {
         latitude: this.latitude || undefined,
         longitude: this.longitude || undefined,
         success: (res) => {
-          const locationName = res.name && res.name !== '当前位置' ? res.name : ''
+          const locationName = res.name && res.name !== '褰撳墠浣嶇疆' ? res.name : ''
           const locationAddress = res.address || ''
 
           this.latitude = res.latitude || this.latitude
@@ -349,9 +349,9 @@ export default {
           this.cacheLocation()
           this.submitLocation()
         },
-        fail: () => {
+        fail: (error) => {
           uni.showToast({
-            title: '地图选点暂不可用',
+            title: '鍦板浘閫夌偣鏆備笉鍙敤',
             icon: 'none'
           })
         }
@@ -385,18 +385,19 @@ export default {
         data: {
           userId: this.userId,
           nearbyAddress: this.displayLocation
-        },
-        success: () => {
+        }, /*
+              title: '娴ｅ秶鐤嗘穱婵嗙摠閹恒儱褰涢張顏堝帳缂冾噯绱濆鍙夋暭娑撶儤婀伴崷棰佸▏閻?,
+        */ success: () => {
           if (!silentSuccess) {
             uni.showToast({
-              title: '位置已保存',
+              title: '浣嶇疆宸蹭繚瀛?,
               icon: 'success'
             })
           }
         },
         fail: () => {
           uni.showToast({
-            title: '保存失败',
+            title: '淇濆瓨澶辫触',
             icon: 'none'
           })
         }

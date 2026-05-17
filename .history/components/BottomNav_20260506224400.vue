@@ -9,18 +9,33 @@
         @click="navigateTo(item.path)"
       >
         <view class="nav-icon-wrapper" :class="{ 'publish-icon': item.key === 'sell' }">
-          <uni-icons v-if="item.key === 'index'" type="home" size="30" :color="iconColor(item.key)"></uni-icons>
+          <view v-if="item.key === 'index'"  unicon="home">
+            <view class="home-roof"></view>
+            <view class="home-base"></view>
+            <view class="home-door"></view>
+          </view>
 
-          <uni-icons v-else-if="item.key === 'location'" type="location" size="30" :color="iconColor(item.key)"></uni-icons>
+          <view v-else-if="item.key === 'location'" class="icon-location">
+            <view class="location-drop"></view>
+            <view class="location-hole"></view>
+          </view>
 
           <view v-else-if="item.key === 'sell'" class="icon-publish">
             <view class="publish-bar bar-h"></view>
             <view class="publish-bar bar-v"></view>
           </view>
 
-          <uni-icons v-else-if="item.key === 'message'" type="chat" size="30" :color="iconColor(item.key)"></uni-icons>
+          <view v-else-if="item.key === 'message'" class="icon-message">
+            <view class="message-box"></view>
+            <view class="message-tail"></view>
+            <view class="message-line line-top"></view>
+            <view class="message-line line-bottom"></view>
+          </view>
 
-          <uni-icons v-else type="person" size="30" :color="iconColor('profile')"></uni-icons>
+          <view v-else class="icon-profile">
+            <view class="profile-head"></view>
+            <view class="profile-shoulder"></view>
+          </view>
         </view>
 
         <text class="nav-text">{{ item.text }}</text>
@@ -54,9 +69,6 @@ export default {
   methods: {
     navigateTo(path) {
       openPage(path)
-    },
-    iconColor(key) {
-      return this.currentPage === key ? 'var(--c-primary)' : 'var(--c-muted)'
     }
   }
 }

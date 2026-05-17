@@ -76,14 +76,24 @@ function handleUnauthorized() {
   }, 500)
 }
 
-export function request(options) {
-  const { url, header = {}, success, complete, ...rest } = options
+function isHttpSuccess(statusCode) {
+  return statusCode >= 200 && statusCode < 300
+}
+
+function attachAuthHeader(url, header = {}) {
   const requestHeader = { ...header }
   const token = uni.getStorageSync(TOKEN_KEY)
 
   if (token && !isAuthFreeUrl(url)) {
     requestHeader.Authorization = `Bearer ${token}`
   }
+
+  return requestHeader
+}
+
+export function request(options) {
+  const { url, header = {}, success, fail, complete, ...rest } = options
+  const requestHeader = attachAuthHeader(url, header)
 
   return uni.request({
     url: buildApiUrl(url),
@@ -96,8 +106,75 @@ export function request(options) {
         return
       }
 
+      if (!isHttpSuccess(res.statusCode)) {
+        if (typeof fail === 'function') {
+          fail(res)
+        }
+        return
+      }
+
       if (typeof success === 'function') {
         success(res)
+      }
+    },
+    fail: (error) => {
+      if (typeof fail === 'function') {
+        fail(error)
+      }
+    },
+    complete: (res) => {
+      if (typeof complete === 'function') {
+        complete(res)
+      }
+    }
+  })
+}
+
+function normalizeUploadResponse(res) {
+  if (!res || typeof res.data !== 'string') {
+    return res
+  }
+
+  try {
+    return {
+      ...res,
+      data: JSON.parse(res.data)
+    }
+  } catch (error) {
+    return res
+  }
+}
+
+export function uploadFile(options) {
+  const { url, header = {}, success, fail, complete, ...rest } = options
+  const requestHeader = attachAuthHeader(url, header)
+
+  return uni.uploadFile({
+    url: buildApiUrl(url),
+    withCredentials: true,
+    header: requestHeader,
+    ...rest,
+    success: (res) => {
+      const normalizedRes = normalizeUploadResponse(res)
+      if (isUnauthorized(normalizedRes)) {
+        handleUnauthorized()
+        return
+      }
+
+      if (!isHttpSuccess(normalizedRes.statusCode)) {
+        if (typeof fail === 'function') {
+          fail(normalizedRes)
+        }
+        return
+      }
+
+      if (typeof success === 'function') {
+        success(normalizedRes)
+      }
+    },
+    fail: (error) => {
+      if (typeof fail === 'function') {
+        fail(error)
       }
     },
     complete: (res) => {

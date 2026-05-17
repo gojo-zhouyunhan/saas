@@ -9,18 +9,38 @@
         @click="navigateTo(item.path)"
       >
         <view class="nav-icon-wrapper" :class="{ 'publish-icon': item.key === 'sell' }">
-          <uni-icons v-if="item.key === 'index'" type="home" size="30" :color="iconColor(item.key)"></uni-icons>
+          <uni-icons
+            v-if="item.key === 'index'"
+            type="home"
+            size="30"
+            :color="currentPage === item.key ? 'var(--c-primary)' : 'var(--c-muted)'"
+          ></uni-icons>
 
-          <uni-icons v-else-if="item.key === 'location'" type="location" size="30" :color="iconColor(item.key)"></uni-icons>
+          <uni-icons
+            v-else-if="item.key === 'location'"
+            type="location"
+            size="30"
+            :color="currentPage === item.key ? 'var(--c-primary)' : 'var(--c-muted)'"
+          ></uni-icons>
 
           <view v-else-if="item.key === 'sell'" class="icon-publish">
             <view class="publish-bar bar-h"></view>
             <view class="publish-bar bar-v"></view>
           </view>
 
-          <uni-icons v-else-if="item.key === 'message'" type="chat" size="30" :color="iconColor(item.key)"></uni-icons>
+          <uni-icons
+            v-else-if="item.key === 'message'"
+            type="chat"
+            size="30"
+            :color="currentPage === item.key ? 'var(--c-primary)' : 'var(--c-muted)'"
+          ></uni-icons>
 
-          <uni-icons v-else type="person" size="30" :color="iconColor('profile')"></uni-icons>
+          <uni-icons
+            v-else
+            type="person"
+            size="30"
+            :color="currentPage === item.key ? 'var(--c-primary)' : 'var(--c-muted)'"
+          ></uni-icons>
         </view>
 
         <text class="nav-text">{{ item.text }}</text>
@@ -32,8 +52,12 @@
 
 <script>
 import { openPage } from '../utils/navigation'
+import UniIcons from './uni-icons/uni-icons.vue'
 
 export default {
+  components: {
+    UniIcons
+  },
   props: {
     currentPage: {
       type: String,
@@ -54,9 +78,6 @@ export default {
   methods: {
     navigateTo(path) {
       openPage(path)
-    },
-    iconColor(key) {
-      return this.currentPage === key ? 'var(--c-primary)' : 'var(--c-muted)'
     }
   }
 }
@@ -146,7 +167,6 @@ export default {
   text-align: center;
 }
 
-.icon-home,
 .icon-location,
 .icon-publish,
 .icon-message,
@@ -154,60 +174,6 @@ export default {
   position: relative;
   width: 42rpx;
   height: 42rpx;
-}
-
-.home-roof {
-  position: absolute;
-  left: 10rpx;
-  top: 7rpx;
-  width: 22rpx;
-  height: 22rpx;
-  border-top: 4rpx solid var(--c-muted);
-  border-left: 4rpx solid var(--c-muted);
-  transform: rotate(45deg);
-  border-top-left-radius: 3rpx;
-}
-
-.home-base {
-  position: absolute;
-  left: 10rpx;
-  bottom: 7rpx;
-  width: 22rpx;
-  height: 16rpx;
-  border: 4rpx solid var(--c-muted);
-  border-radius: 8rpx;
-  background: transparent;
-}
-
-.home-door {
-  position: absolute;
-  left: 18rpx;
-  bottom: 7rpx;
-  width: 6rpx;
-  height: 10rpx;
-  border-radius: 4rpx 4rpx 0 0;
-  background: var(--c-muted);
-}
-
-.location-drop {
-  position: absolute;
-  left: 11rpx;
-  top: 5rpx;
-  width: 20rpx;
-  height: 20rpx;
-  border: 4rpx solid var(--c-muted);
-  border-radius: 20rpx 20rpx 20rpx 2rpx;
-  transform: rotate(-45deg);
-}
-
-.location-hole {
-  position: absolute;
-  left: 18rpx;
-  top: 13rpx;
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 999rpx;
-  background: var(--c-muted);
 }
 
 .publish-bar {
@@ -227,81 +193,5 @@ export default {
   height: 26rpx;
 }
 
-.message-box {
-  position: absolute;
-  left: 6rpx;
-  top: 8rpx;
-  width: 28rpx;
-  height: 20rpx;
-  border: 4rpx solid var(--c-muted);
-  border-radius: 12rpx;
-}
 
-.message-tail {
-  position: absolute;
-  left: 14rpx;
-  bottom: 6rpx;
-  width: 10rpx;
-  height: 10rpx;
-  border-left: 4rpx solid var(--c-muted);
-  border-bottom: 4rpx solid var(--c-muted);
-  transform: skewX(-20deg) rotate(-24deg);
-  border-bottom-left-radius: 4rpx;
-}
-
-.message-line {
-  position: absolute;
-  left: 14rpx;
-  height: 3rpx;
-  border-radius: 999rpx;
-  background: var(--c-muted);
-}
-
-.line-top {
-  top: 16rpx;
-  width: 12rpx;
-}
-
-.line-bottom {
-  top: 23rpx;
-  width: 16rpx;
-}
-
-.profile-head {
-  position: absolute;
-  left: 13rpx;
-  top: 5rpx;
-  width: 16rpx;
-  height: 16rpx;
-  border: 4rpx solid var(--c-muted);
-  border-radius: 999rpx;
-}
-
-.profile-shoulder {
-  position: absolute;
-  left: 8rpx;
-  bottom: 5rpx;
-  width: 26rpx;
-  height: 14rpx;
-  border: 4rpx solid var(--c-muted);
-  border-top-left-radius: 18rpx;
-  border-top-right-radius: 18rpx;
-  border-bottom: none;
-}
-
-.active .home-roof,
-.active .home-base,
-.active .location-drop,
-.active .message-box,
-.active .message-tail,
-.active .profile-head,
-.active .profile-shoulder {
-  border-color: var(--c-primary);
-}
-
-.active .home-door,
-.active .location-hole,
-.active .message-line {
-  background: var(--c-primary);
-}
 </style>

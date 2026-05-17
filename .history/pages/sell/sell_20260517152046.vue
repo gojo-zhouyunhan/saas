@@ -1,18 +1,13 @@
-<template>
+﻿<template>
   <view class="container">
     <view class="page-head">
       <view>
         <text class="page-title">发布车辆</text>
         <text class="page-subtitle">先填写车辆信息，再进入 AI 生成页检查内容。</text>
       </view>
-      <view class="page-actions">
-        <text class="page-action draft" :class="{ disabled: actionLoading || imageUploading }" @click="saveToDraftbox">
-          {{ actionLoading || imageUploading ? '处理中' : '加入草稿箱' }}
-        </text>
-        <text class="page-action" :class="{ disabled: actionLoading }" @click="goToAiPreview">
-          {{ actionLoading ? '处理中' : 'AI生成' }}
-        </text>
-      </view>
+      <text class="page-action" :class="{ disabled: actionLoading }" @click="goToAiPreview">
+        {{ actionLoading ? '处理中' : 'AI生成' }}
+      </text>
     </view>
 
     <view class="sell-form">
@@ -23,6 +18,7 @@
 
       <view class="section">
         <text class="form-label">车辆图片</text>
+         
         <view class="image-uploader">
           <view class="upload-item add" @click="chooseImage">
             <text class="add-icon">+</text>
@@ -96,7 +92,7 @@
 import BottomNav from '../../components/BottomNav.vue'
 import { buildApiUrl, request } from '../../utils/api'
 import { openPage } from '../../utils/navigation'
-import { clearSellSession, getSellSession, setSellSession } from '../../utils/sell-session'
+import { getSellSession, setSellSession } from '../../utils/sell-session'
 
 export default {
   components: {
@@ -105,7 +101,6 @@ export default {
   data() {
     return {
       form: {
-        draftId: '',
         reportId: '',
         title: '',
         description: '',
@@ -149,6 +144,7 @@ export default {
       if (token) {
         return true
       }
+
       this.showToast('请先登录后再上传图片')
       setTimeout(() => {
         uni.reLaunch({ url: '/pages/login/login' })
@@ -177,9 +173,8 @@ export default {
         this.applySession(session)
         return
       }
-      const draftId = options.draftId || options.reportId
-      if (draftId) {
-        this.loadDraftDetail(draftId)
+      if (options.reportId) {
+        this.loadDraftDetail(options.reportId)
       }
     },
     applySession(session) {
@@ -202,22 +197,20 @@ export default {
       setSellSession(session)
       this.draftMeta.updatedAt = session.updatedAt
     },
-    loadDraftDetail(draftId) {
+    loadDraftDetail(reportId) {
       request({
-        url: `/api/sell/draft/detail?draftId=${draftId}&userId=${this.form.userId || ''}`,
+        url: `/api/ai/report/detail?reportId=${reportId}&userId=${this.form.userId || ''}`,
         success: (res) => {
           const payload = res.data || {}
           if (payload.code !== 200 || !payload.data) {
             this.showToast(payload.message || '草稿加载失败')
             return
-          }
           const data = payload.data
           this.form = Object.assign({}, this.form, {
-            draftId: data.draftId || '',
-            reportId: '',
+            reportId: data.reportId || '',
             title: data.title || '',
             description: data.description || '',
-            price: data.price || '',
+            price: data.sellerPrice || '',
             tradeType: data.tradeType || 'online',
             userId: data.userId ? String(data.userId) : this.form.userId,
             vehicleVin: data.vehicleVin || '',
@@ -234,7 +227,7 @@ export default {
           }
           this.persistSession()
         }
-      })
+      }})
     },
     chooseImage() {
       if (this.imageUploading) {
@@ -252,7 +245,9 @@ export default {
           if (!files.length) {
             return
           }
+          this.imageUploading = true
           this.images = this.images.concat(files).slice(0, 9)
+          this.imageUploading = false
           this.persistSession()
         }
       })
@@ -261,75 +256,8 @@ export default {
       this.images.splice(index, 1)
       this.persistSession()
     },
-    buildAuthHeader() {
-      const token = uni.getStorageSync('token')
-      return token ? { Authorization: `Bearer ${token}` } : {}
-    },
     getRemoteImageUrls() {
       return this.images.filter((image) => /^https?:\/\//.test(image))
-    },
-    uploadImage(filePath) {
-      return new Promise((resolve, reject) => {
-        uni.uploadFile({
-          url: buildApiUrl('/api/ai/report/upload-sell-image'),
-          filePath,
-          name: 'image',
-          header: this.buildAuthHeader(),
-          success: (res) => {
-            try {
-              const payload = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || {})
-              if (payload.code !== 200 || !payload.data || !payload.data.imageUrl) {
-                reject(new Error(payload.message || '图片上传失败'))
-                return
-              }
-              resolve(payload.data.imageUrl)
-            } catch (error) {
-              reject(error)
-            }
-          },
-          fail: reject
-        })
-      })
-    },
-    async ensureDraftImagesUploaded() {
-      const remoteImages = this.getRemoteImageUrls()
-      const localImages = this.images.filter((image) => !/^https?:\/\//.test(image))
-      if (!localImages.length) {
-        return remoteImages
-      }
-      this.imageUploading = true
-      try {
-        const uploadedImages = []
-        for (const filePath of localImages) {
-          const imageUrl = await this.uploadImage(filePath)
-          uploadedImages.push(imageUrl)
-        }
-        this.images = remoteImages.concat(uploadedImages)
-        this.persistSession()
-        return this.images.slice()
-      } finally {
-        this.imageUploading = false
-      }
-    },
-    buildDraftPayload(imageUrls) {
-      return {
-        draftId: this.form.draftId || undefined,
-        reportId: this.form.reportId || this.aiMeta.reportId || undefined,
-        userId: Number(this.form.userId),
-        title: this.form.title,
-        description: this.form.description,
-        price: this.form.price,
-        tradeType: this.form.tradeType,
-        vehicleVin: this.form.vehicleVin,
-        vehicleBaseId: this.form.vehicleBaseId ? Number(this.form.vehicleBaseId) : undefined,
-        licensePlate: this.form.licensePlate,
-        mileage: this.form.mileage ? Number(this.form.mileage) : undefined,
-        imageUrls,
-        aiReportSchema: this.aiPreview,
-        structuredReport: this.aiPreview && this.aiPreview.structuredReport ? this.aiPreview.structuredReport : undefined,
-        aiPrompt: this.aiMeta.prompt,
-        aiRawResponse: this.aiMeta.rawResponse
-      }
     },
     validateBeforeAi() {
       if (!this.form.title) {
@@ -368,49 +296,40 @@ export default {
         this.actionLoading = false
       }, 200)
     },
-    resetSellForm() {
-      const userId = this.form.userId
-      this.form = {
-        draftId: '',
-        reportId: '',
-        title: '',
-        description: '',
-        price: '',
-        tradeType: 'online',
-        userId,
-        vehicleVin: '',
-        vehicleBaseId: '',
-        licensePlate: '',
-        mileage: ''
-      }
-      this.images = []
-      this.aiPreview = null
-      this.aiMeta = {
-        reportId: '',
-        prompt: '',
-        rawResponse: ''
-      }
-      this.draftMeta = {
-        updatedAt: ''
-      }
-    },
-    async submitDraftSave() {
+    async saveDraftSilently() {
       this.persistSession()
-      if (!this.form.userId) {
-        return false
+      const session = getSellSession()
+      if (!session || !this.form.userId) {
+        return true
       }
-      const imageUrls = await this.ensureDraftImagesUploaded()
-      const payload = this.buildDraftPayload(imageUrls)
+      const payload = {
+        reportId: this.form.reportId || this.aiMeta.reportId || undefined,
+        userId: Number(this.form.userId),
+        title: this.form.title,
+        description: this.form.description,
+        price: this.form.price,
+        tradeType: this.form.tradeType,
+        vehicleVin: this.form.vehicleVin,
+        vehicleBaseId: this.form.vehicleBaseId ? Number(this.form.vehicleBaseId) : undefined,
+        licensePlate: this.form.licensePlate,
+        mileage: this.form.mileage ? Number(this.form.mileage) : undefined,
+        imageUrls: this.getRemoteImageUrls(),
+        aiReportSchema: this.aiPreview,
+        structuredReport: this.aiPreview && this.aiPreview.structuredReport ? this.aiPreview.structuredReport : undefined,
+        aiPrompt: this.aiMeta.prompt,
+        aiRawResponse: this.aiMeta.rawResponse
+      }
       return new Promise((resolve) => {
         request({
-          url: '/api/sell/draft/save',
+          url: '/api/ai/report/draft/save',
           method: 'POST',
           header: { 'Content-Type': 'application/json' },
           data: payload,
           success: (res) => {
             const result = res.data || {}
             if (result.code === 200 && result.data) {
-              this.form.draftId = result.data.draftId || this.form.draftId
+              this.form.reportId = result.data.reportId || this.form.reportId
+              this.aiMeta.reportId = result.data.reportId || this.aiMeta.reportId
               this.persistSession()
               resolve(true)
               return
@@ -420,40 +339,6 @@ export default {
           fail: () => resolve(false)
         })
       })
-    },
-    async saveToDraftbox() {
-      if (this.actionLoading || this.imageUploading) {
-        return
-      }
-      if (!this.form.userId) {
-        this.showToast('请先登录后再操作')
-        return
-      }
-      this.actionLoading = true
-      try {
-        const success = await this.submitDraftSave()
-        if (!success) {
-          this.showToast('草稿保存失败')
-          return
-        }
-        uni.showToast({ title: '已加入草稿箱', icon: 'success' })
-        clearSellSession()
-        this.resetSellForm()
-        setTimeout(() => {
-          uni.switchTab({ url: '/pages/index/index' })
-        }, 600)
-      } catch (error) {
-        this.showToast((error && error.message) || '草稿保存失败')
-      } finally {
-        this.actionLoading = false
-      }
-    },
-    async saveDraftSilently() {
-      try {
-        return await this.submitDraftSave()
-      } catch (error) {
-        return false
-      }
     },
     handleExitPrompt() {
       if (!this.form.title && !this.form.description && this.images.length === 0) {
@@ -508,11 +393,6 @@ export default {
   gap: 20rpx;
   margin-bottom: 20rpx;
 }
-.page-actions {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
 .page-title {
   display: block;
   font-size: 36rpx;
@@ -535,10 +415,6 @@ export default {
   color: #fff;
   font-size: 28rpx;
   font-weight: 600;
-}
-.page-action.draft {
-  background: rgba(11, 60, 93, 0.08);
-  color: var(--c-primary);
 }
 .page-action.disabled {
   opacity: 0.65;

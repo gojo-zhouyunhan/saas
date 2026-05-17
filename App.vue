@@ -9,6 +9,9 @@ page {
   --c-surface: #ffffff;
   --c-nav: #2f3135;
   --c-nav-text: #ffffff;
+  --nav-pt: calc(24rpx + var(--status-bar-height));
+  --nav-px: 30rpx;
+  --nav-pb: 24rpx;
   --c-text: #1f2937;
   --c-text-2: #374151;
   --c-muted: #6b7280;

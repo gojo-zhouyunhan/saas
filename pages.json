@@ -31,6 +31,26 @@
 			}
 		},
 		{
+			"path": "pages/sell/ai-preview",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "AI预览",
+				"navigationBarBackgroundColor": "#2F3135",
+				"navigationBarTextStyle": "white",
+				"backgroundColor": "#F3F4F6"
+			}
+		},
+		{
+			"path": "pages/sell/publish-settings",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "发布设置",
+				"navigationBarBackgroundColor": "#2F3135",
+				"navigationBarTextStyle": "white",
+				"backgroundColor": "#F3F4F6"
+			}
+		},
+		{
 			"path": "pages/report-layout/report-layout",
 			"style": {
 				"navigationStyle": "custom",
@@ -55,6 +75,16 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "我的",
+				"navigationBarBackgroundColor": "#2F3135",
+				"navigationBarTextStyle": "white",
+				"backgroundColor": "#F3F4F6"
+			}
+		},
+		{
+			"path": "pages/profile/drafts",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "草稿箱",
 				"navigationBarBackgroundColor": "#2F3135",
 				"navigationBarTextStyle": "white",
 				"backgroundColor": "#F3F4F6"

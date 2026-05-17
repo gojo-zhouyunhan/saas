@@ -9,7 +9,11 @@
         @click="navigateTo(item.path)"
       >
         <view class="nav-icon-wrapper" :class="{ 'publish-icon': item.key === 'sell' }">
-          <uni-icons v-if="item.key === 'index'" type="home" size="30" :color="iconColor(item.key)"></uni-icons>
+          <view v-if="item.key === 'index'" class="icon-home">
+            <view class="home-roof"></view>
+            <view class="home-base"></view>
+            <view class="home-door"></view>
+          </view>
 
           <uni-icons v-else-if="item.key === 'location'" type="location" size="30" :color="iconColor(item.key)"></uni-icons>
 
