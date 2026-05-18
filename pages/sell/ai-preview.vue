@@ -238,9 +238,7 @@ export default {
     },
     metaItems() {
       return [
-        { label: '报告 ID', value: this.aiMeta.reportId },
-        { label: '场景', value: 'used_car_inspection' },
-        { label: '风格', value: 'business' }
+        { label: '报告 ID', value: this.aiMeta.reportId }
       ].filter((item) => item.value)
     }
   },
@@ -282,7 +280,8 @@ export default {
         scene: 'used_car_inspection',
         preferredStyle: 'business',
         userId: Number(this.form.userId),
-        vehicleVin: this.form.vehicleVin
+        vehicleVin: this.form.vehicleVin,
+        tradeType: this.form.tradeType
       }
       if (this.form.vehicleBaseId) {
         data.vehicleBaseId = Number(this.form.vehicleBaseId)
@@ -460,29 +459,41 @@ export default {
     normalizeBasicInfoRows(source) {
       if (Array.isArray(source)) {
         return source.map((item, index) => ({
-          label: item.label || item.name || item.key || item.title || `信息 ${index + 1}`,
+          label: this.normalizeBasicInfoLabel(item.label || item.name || item.key || item.title || `信息 ${index + 1}`),
           value: this.formatDisplayValue(item.value !== undefined ? item.value : item.content, item.unit),
           note: item.note || item.description || item.emphasis || ''
-        }))
+        })).filter((item) => item.label)
       }
       if (typeof source === 'object' && source) {
         return Object.keys(source).map((key) => {
           const rawValue = source[key]
           if (rawValue && typeof rawValue === 'object' && !Array.isArray(rawValue)) {
             return {
-              label: rawValue.label || rawValue.name || key,
+              label: this.normalizeBasicInfoLabel(rawValue.label || rawValue.name || key),
               value: this.formatDisplayValue(rawValue.value !== undefined ? rawValue.value : rawValue.content, rawValue.unit),
               note: rawValue.note || rawValue.description || rawValue.emphasis || ''
             }
           }
           return {
-            label: key,
+            label: this.normalizeBasicInfoLabel(key),
             value: this.formatDisplayValue(rawValue),
             note: ''
           }
-        })
+        }).filter((item) => item.label)
       }
       return []
+    },
+    normalizeBasicInfoLabel(label) {
+      const labelMap = {
+        vehicleName: '车辆名称',
+        tradeType: '交易类型',
+        otherInfo: '其余基础信息',
+        vin: 'VIN',
+        scene: '',
+        preferredStyle: '',
+        style: ''
+      }
+      return labelMap[label] !== undefined ? labelMap[label] : label
     },
     normalizeStructuredBlocks(source) {
       if (!source) {
@@ -565,11 +576,15 @@ export default {
 .report-tab.active { background: #1f5d8b; }
 .report-tab-text { font-size: 24rpx; color: #fff; text-align: center; }
 .meta-list { margin-top: 20rpx; display: grid; gap: 12rpx; }
-.meta-item, .detail-item { display: flex; justify-content: space-between; gap: 20rpx; padding: 18rpx 20rpx; border-radius: 16rpx; background-color: rgba(255,255,255,0.82); }
+.meta-item { display: flex; justify-content: space-between; gap: 20rpx; padding: 18rpx 20rpx; border-radius: 16rpx; background-color: rgba(255,255,255,0.82); }
+.detail-item { display: grid; grid-template-columns: 168rpx minmax(0, 1fr); align-items: start; column-gap: 20rpx; row-gap: 10rpx; padding: 18rpx 20rpx; border-radius: 16rpx; background-color: rgba(255,255,255,0.82); }
 .meta-label, .meta-value, .detail-key, .detail-value, .detail-note { font-size: 24rpx; line-height: 1.6; }
 .meta-label, .detail-key, .detail-note { color: var(--c-muted); }
 .meta-value, .detail-value { color: var(--c-text); }
-.detail-value-wrap { flex: 1; min-width: 0; }
+.detail-key { padding-top: 2rpx; }
+.detail-value-wrap { min-width: 0; }
+.detail-value { display: block; word-break: break-all; }
+.detail-note { display: block; margin-top: 6rpx; }
 .preview-block { margin-top: 28rpx; }
 .hero-block, .report-card { padding: 24rpx; border: 1rpx solid rgba(15,23,42,0.08); border-radius: 20rpx; background: linear-gradient(135deg, rgba(230,240,246,0.92) 0%, #ffffff 100%); }
 .appearance-image-scroll { width: 100%; margin-top: 18rpx; }
