@@ -162,7 +162,7 @@ export default {
           clearSellSession()
           uni.showToast({ title: '发布成功', icon: 'success' })
           setTimeout(() => {
-            uni.switchTab({ url: '/pages/index/index' })
+            openPage('/pages/index/index')
           }, 600)
         },
         fail: () => {
@@ -203,7 +203,7 @@ export default {
                 aiRawResponse: this.aiMeta.rawResponse
               },
               complete: () => {
-                uni.switchTab({ url: '/pages/profile/profile' })
+                openPage('/pages/profile/profile')
               }
             })
             return

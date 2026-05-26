@@ -1,153 +1,163 @@
 {
-	"pages": [
-		{
-			"path": "pages/index/index",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "首页",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/location/location",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "同城",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/sell/sell",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "发布",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/sell/ai-preview",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "AI预览",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/sell/publish-settings",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "发布设置",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/car/detail",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "车辆详情",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/report-layout/report-layout",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "检测报告布局",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/message/message",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "消息",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/profile/profile",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "我的",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/profile/drafts",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "草稿箱",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/login/login",
-			"style": {
-				"navigationBarTitleText": "登录",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/login/phonelogin",
-			"style": {
-				"navigationBarTitleText": "验证码登录",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		},
-		{
-			"path": "pages/register/register",
-			"style": {
-				"navigationBarTitleText": "注册",
-				"navigationBarBackgroundColor": "#2F3135",
-				"navigationBarTextStyle": "white",
-				"backgroundColor": "#F3F4F6"
-			}
-		}
-	],
-	"globalStyle": {
-		"navigationBarTextStyle": "white",
-		"navigationBarTitleText": "二手车交易平台",
-		"navigationBarBackgroundColor": "#2F3135",
-		"backgroundColor": "#F3F4F6",
-		"app-plus": {
-			"background": "#F3F4F6"
-		}
-	},
-	"uniIdRouter": {},
-	"mp-weixin": {
-		"appid": "",
-		"setting": {
-			"urlCheck": false
-		},
-		"usingComponents": true,
-		"permission": {
-			"scope.userLocation": {
-				"desc": "您的位置信息将用于定位附近车源与地图选点功能展示"
-			}
-		}
-	}
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "首页",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/location/location",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "同城",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/sell/sell",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "发布",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/sell/ai-preview",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI预览",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/sell/publish-settings",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "发布设置",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/car/detail",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "车辆详情",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/report-layout/report-layout",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "检测报告布局",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/message/message",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "消息",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "我的",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/drafts",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "草稿箱",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/orders",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "我的订单",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/login/phonelogin",
+      "style": {
+        "navigationBarTitleText": "验证码登录",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "二手车交易平台",
+    "navigationBarBackgroundColor": "#2F3135",
+    "backgroundColor": "#F3F4F6",
+    "app-plus": {
+      "background": "#F3F4F6"
+    }
+  },
+  "uniIdRouter": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false
+    },
+    "usingComponents": true,
+    "permission": {
+      "scope.userLocation": {
+        "desc": "您的位置信息将用于定位附近车源与地图选点功能展示"
+      }
+    }
+  }
 }

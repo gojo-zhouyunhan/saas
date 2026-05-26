@@ -21,6 +21,14 @@
         <text class="hero-title">{{ reportTitle }}</text>
         <text v-if="priceText" class="hero-price">{{ priceText }}</text>
         <text v-if="tradeTypeText" class="hero-pill">{{ tradeTypeText }}</text>
+        <view class="hero-actions">
+          <view class="hero-action-button hero-action-primary" @click="handleContact">
+            <text class="hero-action-text hero-action-text-primary">{{ '\u5728\u7ebf\u8054\u7cfb' }}</text>
+          </view>
+          <view class="hero-action-button hero-action-secondary" @click="toggleFavorite">
+            <text class="hero-action-text hero-action-text-secondary">{{ isFavorite ? '\u5df2\u6536\u85cf' : '\u6536\u85cf' }}</text>
+          </view>
+        </view>
         <text v-if="reportSubtitle" class="hero-subtitle">{{ reportSubtitle }}</text>
       </view>
 
@@ -148,11 +156,12 @@
 
 <script>
 import { buildApiUrl, request } from '../../utils/api'
-import { goBackOrFallback } from '../../utils/navigation'
+import { goBackOrFallback, openPage } from '../../utils/navigation'
 import Timeline from '../../components/report/Timeline.vue'
 import ProgressBar from '../../components/report/ProgressBar.vue'
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800'
+const FAVORITES_STORAGE_KEY = 'favoriteReports'
 
 export default {
   components: {
@@ -164,7 +173,8 @@ export default {
       reportId: '',
       report: null,
       loading: true,
-      error: ''
+      error: '',
+      isFavorite: false
     }
   },
   computed: {
@@ -172,16 +182,17 @@ export default {
       return (this.report && this.report.aiReportSchema) || {}
     },
     structuredReport() {
-      return (this.report && this.report.structuredReport) || this.reportSchema.structuredReport || {}
+      return (this.report && this.report.structuredReport) || this.reportSchema['结构化报告'] || this.reportSchema.structuredReport || {}
     },
     reportTitle() {
-      return (this.report && this.report.title) || (this.reportSchema.hero && this.reportSchema.hero.title) || this.reportSchema.pageTitle || '车辆详情'
+      const hero = this.reportSchema['首屏'] || this.reportSchema.hero || {}
+      return (this.report && this.report.title) || hero['标题'] || hero.title || this.reportSchema['页面标题'] || this.reportSchema.pageTitle || '车辆详情'
     },
     reportSubtitle() {
-      return this.reportSchema.reportSubtitle || (this.report && this.report.description) || ''
+      return this.reportSchema['报告副标题'] || this.reportSchema.reportSubtitle || (this.report && this.report.description) || ''
     },
     reportSummary() {
-      return this.reportSchema.summary || (this.report && this.report.description) || ''
+      return this.reportSchema['摘要'] || this.reportSchema.summary || (this.report && this.report.description) || ''
     },
     imageList() {
       return this.normalizeImageList(this.report && this.report.imageUrls)
@@ -196,7 +207,7 @@ export default {
       return this.formatTradeType(this.report && this.report.tradeType)
     },
     basicInfoRows() {
-      const source = this.structuredReport.basicInfo || (this.report && this.report.basicInfo)
+      const source = this.structuredReport['基本信息'] || this.structuredReport.basicInfo || (this.report && this.report.basicInfo)
       return source ? this.normalizeBasicInfoRows(source) : []
     },
     structuredSections() {
@@ -207,8 +218,15 @@ export default {
         { key: 'maintenanceHistory', label: '维修保养' },
         { key: 'overallEvaluation', label: '综合评价' }
       ]
+      const sectionAliases = {
+        appearanceInspection: ['外观检测', 'appearanceInspection'],
+        interiorInspection: ['内饰检测', 'interiorInspection'],
+        mechanicalPerformance: ['机械性能', 'mechanicalPerformance'],
+        maintenanceHistory: ['维修历史', 'maintenanceHistory'],
+        overallEvaluation: ['综合评价', 'overallEvaluation']
+      }
       return sectionDefs.map((section) => {
-        const source = this.structuredReport[section.key]
+        const source = (sectionAliases[section.key] || [section.key]).map((key) => this.structuredReport[key]).find(Boolean)
         if (!source) {
           return null
         }
@@ -225,8 +243,9 @@ export default {
             maintenanceView
           }
         }
-        const summary = section.summaryField && source[section.summaryField] ? String(source[section.summaryField]) : ''
-        const content = section.summaryField ? this.omitField(source, section.summaryField) : source
+        const summaryValue = source['结论'] || source[section.summaryField]
+        const summary = section.summaryField && summaryValue ? String(summaryValue) : ''
+        const content = section.summaryField ? this.omitField(source, source['结论'] ? '结论' : section.summaryField) : source
         const blocks = this.normalizeStructuredBlocks(content)
         if (!summary && !blocks.length) {
           return null
@@ -247,6 +266,7 @@ export default {
       this.error = '缺少 reportId'
       return
     }
+    this.initFavoriteStatus()
     this.loadDetail()
   },
   methods: {
@@ -273,6 +293,50 @@ export default {
           this.error = '详情加载失败'
         }
       })
+    },
+    initFavoriteStatus() {
+      const favorites = this.getFavoriteReportIds()
+      this.isFavorite = favorites.includes(String(this.reportId))
+    },
+    getFavoriteReportIds() {
+      const stored = uni.getStorageSync(FAVORITES_STORAGE_KEY)
+      if (!stored) {
+        return []
+      }
+      if (Array.isArray(stored)) {
+        return stored.map((item) => String(item)).filter(Boolean)
+      }
+      if (typeof stored === 'string') {
+        try {
+          const parsed = JSON.parse(stored)
+          return Array.isArray(parsed) ? parsed.map((item) => String(item)).filter(Boolean) : []
+        } catch (error) {
+          return []
+        }
+      }
+      return []
+    },
+    saveFavoriteReportIds(ids) {
+      uni.setStorageSync(FAVORITES_STORAGE_KEY, ids)
+    },
+    toggleFavorite() {
+      const reportId = String(this.reportId || '')
+      if (!reportId) {
+        return
+      }
+      const favorites = this.getFavoriteReportIds()
+      if (favorites.includes(reportId)) {
+        this.saveFavoriteReportIds(favorites.filter((item) => item !== reportId))
+        this.isFavorite = false
+        uni.showToast({ title: '\u5df2\u53d6\u6d88\u6536\u85cf', icon: 'none' })
+        return
+      }
+      this.saveFavoriteReportIds([...favorites, reportId])
+      this.isFavorite = true
+      uni.showToast({ title: '\u5df2\u52a0\u5165\u6536\u85cf', icon: 'none' })
+    },
+    handleContact() {
+      openPage('/pages/message/message')
     },
     normalizeImageList(images) {
       if (!Array.isArray(images)) {
@@ -548,6 +612,46 @@ export default {
   color: var(--c-primary);
   font-size: 22rpx;
   font-weight: 600;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 22rpx;
+  flex-wrap: wrap;
+}
+
+.hero-action-button {
+  min-width: 180rpx;
+  padding: 16rpx 26rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.hero-action-primary {
+  background: var(--c-primary);
+  box-shadow: 0 10rpx 24rpx rgba(15, 118, 110, 0.22);
+}
+
+.hero-action-secondary {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1rpx solid rgba(15, 23, 42, 0.08);
+}
+
+.hero-action-text {
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.hero-action-text-primary {
+  color: #ffffff;
+}
+
+.hero-action-text-secondary {
+  color: var(--c-text);
 }
 
 .hero-subtitle {

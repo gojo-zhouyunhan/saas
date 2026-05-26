@@ -437,7 +437,7 @@ export default {
         clearSellSession()
         this.resetSellForm()
         setTimeout(() => {
-          uni.switchTab({ url: '/pages/index/index' })
+          openPage('/pages/index/index')
         }, 600)
       } catch (error) {
         this.showToast((error && error.message) || '草稿保存失败')
@@ -466,7 +466,7 @@ export default {
             const success = await this.saveDraftSilently()
             this.showToast(success ? '已存入草稿箱' : '草稿保存失败')
           }
-          uni.switchTab({ url: '/pages/profile/profile' })
+          openPage('/pages/profile/profile')
         }
       })
       return true

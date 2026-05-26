@@ -20,8 +20,8 @@
     <view v-else-if="aiPreview" class="section ai-preview">
       <view class="preview-header">
         <view class="preview-heading">
-          <text class="preview-title">{{ aiPreview.pageTitle || 'AI 检测报告' }}</text>
-          <text class="preview-summary">{{ aiPreview.reportSubtitle || aiPreview.summary || '已生成结构化检测报告内容。' }}</text>
+          <text class="preview-title">{{ aiPreview['页面标题'] || aiPreview.pageTitle || 'AI 检测报告' }}</text>
+          <text class="preview-summary">{{ aiPreview['报告副标题'] || aiPreview.reportSubtitle || aiPreview['摘要'] || aiPreview.summary || '已生成结构化检测报告内容。' }}</text>
         </view>
       </view>
 
@@ -218,26 +218,30 @@ export default {
   },
   computed: {
     heroTitle() {
-      return (this.aiPreview && this.aiPreview.hero && this.aiPreview.hero.title) || this.form.title || 'AI 卖车展示'
+      const hero = this.getSchemaObject('首屏', 'hero')
+      return (hero && this.getFieldValue(hero, '标题', 'title')) || this.form.title || 'AI 卖车展示'
     },
     heroPriceText() {
-      return (this.aiPreview && this.aiPreview.hero && this.aiPreview.hero.priceText) || ''
+      const hero = this.getSchemaObject('首屏', 'hero')
+      return (hero && this.getFieldValue(hero, '价格文案', 'priceText')) || ''
     },
     heroConfidenceText() {
-      return (this.aiPreview && this.aiPreview.hero && this.aiPreview.hero.confidenceText) || ''
+      const hero = this.getSchemaObject('首屏', 'hero')
+      return (hero && this.getFieldValue(hero, '可信文案', 'confidenceText')) || ''
     },
     heroTags() {
-      return (this.aiPreview && this.aiPreview.hero && this.aiPreview.hero.tags) || []
+      const hero = this.getSchemaObject('首屏', 'hero')
+      return (hero && this.getFieldValue(hero, '标签', 'tags')) || []
     },
     overviewCards() {
-      return (this.aiPreview && this.aiPreview.overviewCards) || []
+      return this.getFieldValue(this.aiPreview, '概览卡片', 'overviewCards') || []
     },
     structuredReport() {
-      return (this.aiPreview && this.aiPreview.structuredReport) || {}
+      return this.getSchemaObject('结构化报告', 'structuredReport') || {}
     },
     appearanceConclusion() {
-      const appearanceInspection = this.structuredReport.appearanceInspection
-      return appearanceInspection && appearanceInspection.conclusion ? appearanceInspection.conclusion : ''
+      const appearanceInspection = this.getStructuredSection('外观检测', 'appearanceInspection')
+      return (appearanceInspection && this.getFieldValue(appearanceInspection, '结论', 'conclusion')) || ''
     },
     appearanceImageList() {
       return this.images.filter((image) => typeof image === 'string' && image)
@@ -259,13 +263,13 @@ export default {
       if (!this.selectedPreviewSection || this.selectedPreviewSection.key === 'basicInfo') {
         return []
       }
-      return this.normalizeStructuredBlocks(this.structuredReport[this.selectedPreviewSection.key])
+      return this.normalizeStructuredBlocks(this.getStructuredSection(this.selectedPreviewSection.key))
     },
     maintenanceHistoryView() {
-      return this.buildMaintenanceHistoryView(this.structuredReport.maintenanceHistory)
+      return this.buildMaintenanceHistoryView(this.getStructuredSection('maintenanceHistory'))
     },
     basicInfoRows() {
-      const previewBasicInfo = this.structuredReport.basicInfo || (this.aiPreview && this.aiPreview.basicInfo)
+      const previewBasicInfo = this.getStructuredSection('basicInfo') || this.getSchemaObject('基本信息', 'basicInfo')
       if (previewBasicInfo) {
         return this.normalizeBasicInfoRows(previewBasicInfo)
       }
@@ -302,6 +306,33 @@ export default {
   methods: {
     goBack() {
       this.handleExitPrompt()
+    },
+    getFieldValue(source, ...keys) {
+      if (!source || typeof source !== 'object') {
+        return undefined
+      }
+      for (const key of keys) {
+        if (key && source[key] !== undefined) {
+          return source[key]
+        }
+      }
+      return undefined
+    },
+    getSchemaObject(...keys) {
+      const value = this.getFieldValue(this.aiPreview, ...keys)
+      return value && typeof value === 'object' ? value : null
+    },
+    getStructuredSection(key) {
+      const keyMap = {
+        basicInfo: ['基本信息', 'basicInfo'],
+        appearanceInspection: ['外观检测', 'appearanceInspection'],
+        interiorInspection: ['内饰检测', 'interiorInspection'],
+        mechanicalPerformance: ['机械性能', 'mechanicalPerformance'],
+        maintenanceHistory: ['维修历史', 'maintenanceHistory'],
+        overallEvaluation: ['综合评价', 'overallEvaluation']
+      }
+      const aliases = keyMap[key] || [key]
+      return this.getFieldValue(this.structuredReport, ...aliases)
     },
     resetAiPreviewState() {
       this.aiPreview = null
@@ -447,7 +478,7 @@ export default {
         mileage: this.form.mileage ? Number(this.form.mileage) : undefined,
         imageUrls: this.getRemoteImageUrls(),
         aiReportSchema: this.aiPreview,
-        structuredReport: this.aiPreview && this.aiPreview.structuredReport ? this.aiPreview.structuredReport : undefined,
+        structuredReport: this.getSchemaObject('结构化报告', 'structuredReport') || undefined,
         aiPrompt: this.aiMeta.prompt,
         aiRawResponse: this.aiMeta.rawResponse
       }
@@ -623,7 +654,7 @@ export default {
       if (!source) {
         return []
       }
-      if (this.previewSectionKey === 'maintenanceHistory') {
+      if (this.previewSectionKey === 'maintenanceHistory' || this.previewSectionKey === '维修历史') {
         return []
       }
       if (typeof source === 'string' || typeof source === 'number' || typeof source === 'boolean') {
@@ -641,7 +672,7 @@ export default {
       const rows = []
       const blocks = []
       Object.keys(source).forEach((key) => {
-        if (this.previewSectionKey === 'appearanceInspection' && key === 'conclusion') {
+        if ((this.previewSectionKey === 'appearanceInspection' || this.previewSectionKey === '外观检测') && (key === 'conclusion' || key === '结论')) {
           return
         }
         const rawValue = source[key]
@@ -697,8 +728,8 @@ export default {
 .ai-error-text { color: #c2410c; font-size: 24rpx; line-height: 1.7; }
 .preview-title, .hero-title, .block-title { color: var(--c-text); font-weight: 700; }
 .preview-title { font-size: 30rpx; }
-.report-tabs-scroll { width: 100%; margin-top: 20rpx; }
-.report-tabs { display: inline-flex; gap: 8rpx; min-width: 100%; padding: 10rpx 12rpx; background: #2f2f2f; border-radius: 8rpx; box-sizing: border-box; }
+.report-tabs-scroll { width: 100%; margin-top: 20rpx; white-space: nowrap; }
+.report-tabs { display: inline-flex; flex-wrap: nowrap; min-width: 100%; width: max-content; gap: 8rpx; padding: 10rpx 12rpx; background: #2f2f2f; border-radius: 8rpx; box-sizing: border-box; }
 .report-tab { min-width: 116rpx; padding: 18rpx 16rpx; border-radius: 8rpx; flex-shrink: 0; }
 .report-tab.active { background: #1f5d8b; }
 .report-tab-text { font-size: 24rpx; color: #fff; text-align: center; }

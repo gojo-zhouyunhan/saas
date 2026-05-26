@@ -132,8 +132,9 @@ export default {
     },
     mapCarCard(item) {
       const schema = item.aiReportSchema || {}
-      const hero = schema.hero || {}
-      const basicInfo = item.basicInfo || (item.structuredReport && item.structuredReport.basicInfo) || {}
+      const hero = schema['首屏'] || schema.hero || {}
+      const structuredReport = item.structuredReport || {}
+      const basicInfo = item.basicInfo || structuredReport['基本信息'] || structuredReport.basicInfo || {}
       const imageList = this.normalizeImageList(item.imageUrls)
       const tradeTypeText = this.formatTradeType(item.tradeType)
       return {

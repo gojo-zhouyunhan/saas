@@ -24,45 +24,45 @@
       <view class="function-section">
         <view class="function-item" @click="goToMyCars">
           <text class="function-name">我的车辆</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
         <view class="function-item" @click="goToDrafts">
           <text class="function-name">草稿箱</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
         <view class="function-item" @click="goToMyOrders">
           <text class="function-name">我的订单</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
       </view>
 
       <view class="function-section">
         <view class="function-item" @click="goToFavorites">
           <text class="function-name">我的收藏</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
         <view class="function-item" @click="goToPoints">
           <text class="function-name">我的积分</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
         <view class="function-item" @click="goToHelp">
           <text class="function-name">帮助中心</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
       </view>
 
       <view class="function-section">
         <view class="function-item" @click="goToFeedback">
           <text class="function-name">意见反馈</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
         <view class="function-item" @click="goToAbout">
           <text class="function-name">关于我们</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
         <view class="function-item logout" @click="logout">
           <text class="function-name logout-text">退出登录</text>
-          <text class="function-arrow">›</text>
+          <text class="function-arrow">></text>
         </view>
       </view>
     </view>
@@ -89,7 +89,7 @@ export default {
     userNumber() {
       const user = this.userInfo || {}
       const id = user.userId || user.id || user.number || user.userNo || user.uid
-      return id ? `编号：${id}` : '编号：-'
+      return id ? `编号：${id}` : '编号：--'
     },
     memberLevel() {
       const user = this.userInfo || {}
@@ -127,7 +127,7 @@ export default {
       openPage('/pages/profile/drafts')
     },
     goToMyOrders() {
-      uni.showToast({ title: '我的订单页开发中', icon: 'none' })
+      openPage('/pages/profile/orders')
     },
     goToFavorites() {
       uni.showToast({ title: '我的收藏页开发中', icon: 'none' })
