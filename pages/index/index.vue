@@ -3,9 +3,9 @@
     <view class="header">
       <view class="header-top">
         <view class="search-box">
-          <text class="search-placeholder">搜索车辆品牌、车型、关键词</text>
+          <text class="search-placeholder">搜索品牌、车型或关键词</text>
         </view>
-        <text class="header-action">搜索</text>
+        <text class="header-action" @click="fetchPublishedCars">搜索</text>
       </view>
     </view>
 
@@ -13,12 +13,16 @@
       <view class="section-head">
         <view>
           <text class="section-title">推荐车源</text>
-          <text class="section-subtitle">为你挑选更值得看的热门车型</text>
+          <text class="section-subtitle">基于已发布 AI 检测记录，为你展示最新车源</text>
         </view>
         <text class="section-link" @click="loadMoreCars">查看更多</text>
       </view>
 
-      <view class="masonry">
+      <view v-if="!carList.length" class="empty-state">
+        <text class="empty-text">暂无已发布车源</text>
+      </view>
+
+      <view v-else class="masonry">
         <view class="masonry-column left-column">
           <view
             class="car-card"
@@ -30,13 +34,13 @@
             <image class="car-image image-tall" :src="car.image" mode="aspectFill"></image>
             <view class="car-info">
               <view class="car-tags">
-                <text class="car-tag">包过户</text>
-                <text class="car-tag">可分期</text>
+                <text class="car-tag">AI车况</text>
+                <text class="car-tag">{{ car.tradeTypeText }}</text>
               </view>
               <text class="car-name">{{ car.name }}</text>
               <view class="car-price-row">
                 <text class="car-price">¥{{ car.price }}万</text>
-                <text class="car-deal">支持议价</text>
+                <text class="car-deal">查看详情</text>
               </view>
               <text class="seller-name">{{ car.seller }}</text>
             </view>
@@ -53,13 +57,13 @@
             <image class="car-image image-short" :src="car.image" mode="aspectFill"></image>
             <view class="car-info">
               <view class="car-tags">
-                <text class="car-tag">包过户</text>
-                <text class="car-tag">可分期</text>
+                <text class="car-tag">AI车况</text>
+                <text class="car-tag">{{ car.tradeTypeText }}</text>
               </view>
               <text class="car-name">{{ car.name }}</text>
               <view class="car-price-row">
                 <text class="car-price">¥{{ car.price }}万</text>
-                <text class="car-deal">支持议价</text>
+                <text class="car-deal">查看详情</text>
               </view>
               <text class="seller-name">{{ car.seller }}</text>
             </view>
@@ -74,6 +78,10 @@
 
 <script>
 import BottomNav from '../../components/BottomNav.vue'
+import { buildApiUrl, request } from '../../utils/api'
+import { openPage } from '../../utils/navigation'
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800'
 
 export default {
   components: {
@@ -81,36 +89,7 @@ export default {
   },
   data() {
     return {
-      carList: [
-        {
-          id: 1,
-          name: '丰田卡罗拉 2020款 双擎精英版',
-          price: '12.8',
-          seller: '小牛严选',
-          image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400'
-        },
-        {
-          id: 2,
-          name: '本田思域 2019款 220TURBO 劲动版',
-          price: '11.5',
-          seller: '个人一手车',
-          image: 'https://images.unsplash.com/photo-1605816988066-b0a0ce0a166a?w=400'
-        },
-        {
-          id: 3,
-          name: '大众帕萨特 2021款 330TSI 豪华版',
-          price: '16.8',
-          seller: '城市精品车行',
-          image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400'
-        },
-        {
-          id: 4,
-          name: '宝马 3系 2020款 325Li M运动套装',
-          price: '28.5',
-          seller: '认证旗舰店',
-          image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400'
-        }
-      ]
+      carList: []
     }
   },
   computed: {
@@ -127,20 +106,83 @@ export default {
       uni.reLaunch({
         url: '/pages/login/login'
       })
+      return
+    }
+    this.fetchPublishedCars()
+  },
+  onShow() {
+    if (uni.getStorageSync('token')) {
+      this.fetchPublishedCars()
     }
   },
   methods: {
-    viewCarDetail(car) {
-      uni.showToast({
-        title: car.name,
-        icon: 'none'
+    fetchPublishedCars() {
+      request({
+        url: '/api/ai/report/published/list?limit=20',
+        method: 'GET',
+        success: (res) => {
+          const payload = res.data || {}
+          const list = Array.isArray(payload.data) ? payload.data : []
+          this.carList = list.map((item) => this.mapCarCard(item)).filter((item) => item.reportId)
+        },
+        fail: () => {
+          this.showToast('车源加载失败')
+        }
       })
     },
+    mapCarCard(item) {
+      const schema = item.aiReportSchema || {}
+      const hero = schema.hero || {}
+      const basicInfo = item.basicInfo || (item.structuredReport && item.structuredReport.basicInfo) || {}
+      const imageList = this.normalizeImageList(item.imageUrls)
+      const tradeTypeText = this.formatTradeType(item.tradeType)
+      return {
+        id: item.reportId,
+        reportId: item.reportId,
+        name: item.title || hero.title || basicInfo.vehicleName || '未命名车源',
+        price: this.formatPrice(item.sellerPrice),
+        seller: item.vehicleVin ? `VIN ${String(item.vehicleVin).slice(-6)}` : 'AI检测记录',
+        tradeTypeText,
+        image: imageList[0] || FALLBACK_IMAGE
+      }
+    },
+    normalizeImageList(images) {
+      if (!Array.isArray(images)) {
+        return []
+      }
+      return images.map((image) => {
+        if (typeof image !== 'string' || !image) {
+          return ''
+        }
+        if (image.startsWith('http') || image.startsWith('blob:') || image.startsWith('data:')) {
+          return image
+        }
+        return buildApiUrl(image)
+      }).filter(Boolean)
+    },
+    formatPrice(value) {
+      if (value === undefined || value === null || value === '') {
+        return '--'
+      }
+      return String(value)
+    },
+    formatTradeType(tradeType) {
+      if (tradeType === 'offline') {
+        return '线下看车'
+      }
+      if (tradeType === 'online') {
+        return '在线议价'
+      }
+      return '车况详情'
+    },
+    viewCarDetail(car) {
+      openPage(`/pages/car/detail?reportId=${car.reportId}`)
+    },
     loadMoreCars() {
-      uni.showToast({
-        title: '更多车源整理中',
-        icon: 'none'
-      })
+      this.fetchPublishedCars()
+    },
+    showToast(title) {
+      uni.showToast({ title, icon: 'none' })
     }
   }
 }
@@ -211,6 +253,18 @@ export default {
 .section-link {
   font-size: 24rpx;
   color: var(--c-primary);
+}
+
+.empty-state {
+  padding: 48rpx 24rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 24rpx;
+  color: var(--c-muted);
 }
 
 .masonry {

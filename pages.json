@@ -51,6 +51,16 @@
 			}
 		},
 		{
+			"path": "pages/car/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "车辆详情",
+				"navigationBarBackgroundColor": "#2F3135",
+				"navigationBarTextStyle": "white",
+				"backgroundColor": "#F3F4F6"
+			}
+		},
+		{
 			"path": "pages/report-layout/report-layout",
 			"style": {
 				"navigationStyle": "custom",

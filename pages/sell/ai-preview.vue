@@ -118,8 +118,38 @@
               <text class="keyword-chip" v-for="(tag, index) in block.tags" :key="index">{{ tag }}</text>
             </view>
 
-            <view v-else class="detail-item">
+            <view v-else-if="block.text" class="detail-item detail-item-plain">
               <text class="detail-value">{{ block.text }}</text>
+            </view>
+          </view>
+        </view>
+      </template>
+
+      <template v-else-if="selectedPreviewSection && selectedPreviewSection.key === 'maintenanceHistory' && maintenanceHistoryView">
+        <view class="preview-block">
+          <view class="report-card">
+            <view class="report-card-head">
+              <view class="report-card-heading">
+                <text class="block-title">{{ maintenanceHistoryView.title }}</text>
+                <text v-if="maintenanceHistoryView.intro" class="helper-text">{{ maintenanceHistoryView.intro }}</text>
+              </view>
+            </view>
+
+            <view v-if="maintenanceHistoryView.timelineItems.length" class="maintenance-panel">
+              <Timeline :data="maintenanceHistoryView.timelineItems" />
+            </view>
+
+            <view v-if="maintenanceHistoryView.progressItems.length" class="maintenance-panel">
+              <ProgressBar :data="maintenanceHistoryView.progressItems" />
+            </view>
+
+            <view v-if="maintenanceHistoryView.rows.length" class="detail-list maintenance-detail-list">
+              <view class="detail-item" v-for="(item, index) in maintenanceHistoryView.rows" :key="index">
+                <text class="detail-key">{{ item.label }}</text>
+                <view class="detail-value-wrap">
+                  <text class="detail-value">{{ item.value }}</text>
+                </view>
+              </view>
             </view>
           </view>
         </view>
@@ -149,7 +179,7 @@
               <text class="keyword-chip" v-for="(tag, index) in block.tags" :key="index">{{ tag }}</text>
             </view>
 
-            <view v-else class="detail-item">
+            <view v-else-if="block.text" class="detail-item detail-item-plain">
               <text class="detail-value">{{ block.text }}</text>
             </view>
           </view>
@@ -163,8 +193,14 @@
 import { request, buildApiUrl, uploadFile } from '../../utils/api'
 import { openPage } from '../../utils/navigation'
 import { getSellSession, setSellSession } from '../../utils/sell-session'
+import Timeline from '../../components/report/Timeline.vue'
+import ProgressBar from '../../components/report/ProgressBar.vue'
 
 export default {
+  components: {
+    Timeline,
+    ProgressBar
+  },
   data() {
     return {
       form: {},
@@ -225,6 +261,9 @@ export default {
       }
       return this.normalizeStructuredBlocks(this.structuredReport[this.selectedPreviewSection.key])
     },
+    maintenanceHistoryView() {
+      return this.buildMaintenanceHistoryView(this.structuredReport.maintenanceHistory)
+    },
     basicInfoRows() {
       const previewBasicInfo = this.structuredReport.basicInfo || (this.aiPreview && this.aiPreview.basicInfo)
       if (previewBasicInfo) {
@@ -264,13 +303,38 @@ export default {
     goBack() {
       this.handleExitPrompt()
     },
+    resetAiPreviewState() {
+      this.aiPreview = null
+      this.aiMeta = {
+        reportId: '',
+        prompt: '',
+        rawResponse: ''
+      }
+      this.form.reportId = ''
+    },
+    persistEditingSession() {
+      setSellSession({
+        form: this.form,
+        images: this.images,
+        aiPreview: null,
+        aiMeta: {
+          reportId: '',
+          prompt: '',
+          rawResponse: ''
+        },
+        updatedAt: new Date().toISOString()
+      })
+    },
     buildAiInputText() {
       const tradeTypeText = this.form.tradeType === 'online' ? 'online negotiation' : 'offline viewing'
       const parts = [
-        `Title: ${this.form.title || 'N/A'}`,
-        `Trade Type: ${tradeTypeText}`,
+        this.form.title ? `Title: ${this.form.title}` : '',
+        this.form.tradeType ? `Trade Type: ${tradeTypeText}` : '',
         this.form.price ? `Expected Price: ${this.form.price}` : '',
-        `Description: ${this.form.description || 'N/A'}`
+        this.form.description ? `Description: ${this.form.description}` : '',
+        this.form.vehicleVin ? `VIN: ${this.form.vehicleVin}` : '',
+        this.form.licensePlate ? `License Plate: ${this.form.licensePlate}` : '',
+        this.form.mileage ? `Mileage: ${this.form.mileage} km` : ''
       ]
       return parts.filter(Boolean).join('\n')
     },
@@ -298,13 +362,14 @@ export default {
       return this.images.filter((image) => /^https?:\/\//.test(image))
     },
     requestGenerateLayout() {
+      const requestTimeout = 300000
       const localFiles = this.images.filter((image) => !/^https?:\/\//.test(image))
       if (!localFiles.length) {
         return new Promise((resolve, reject) => {
           request({
             url: '/api/ai/report/generate-layout',
             method: 'POST',
-            timeout: 180000,
+            timeout: requestTimeout,
             data: this.buildAiRequestData(),
             success: resolve,
             fail: reject
@@ -315,6 +380,7 @@ export default {
         const requestData = this.buildAiRequestData()
         const wrappedOptions = {
           url: '/api/ai/report/generate-layout',
+          timeout: requestTimeout,
           formData: Object.keys(requestData).reduce((result, key) => {
             const value = requestData[key]
             if (value !== undefined && value !== null && value !== '') {
@@ -361,7 +427,9 @@ export default {
       } catch (error) {
         this.aiLoading = false
         const errMsg = (error && (error.errMsg || error.message)) || ''
-        this.aiError = errMsg.includes('timeout') ? 'AI generate timeout' : 'Request failed'
+        this.aiError = errMsg.toLowerCase().includes('timeout')
+          ? 'AI 生成超时，请稍后重试或减少图片数量'
+          : 'AI 生成失败，请稍后重试'
       }
     },
     async saveDraftSilently() {
@@ -384,10 +452,10 @@ export default {
         aiRawResponse: this.aiMeta.rawResponse
       }
       return new Promise((resolve) => {
-        uni.request({
-          url: buildApiUrl('/api/sell/draft/save'),
+        request({
+          url: '/api/sell/draft/save',
           method: 'POST',
-          header: Object.assign({ 'Content-Type': 'application/json' }, this.buildAuthHeader()),
+          header: { 'Content-Type': 'application/json' },
           data: payload,
           success: (res) => {
             const result = res.data || {}
@@ -429,6 +497,8 @@ export default {
             openPage('/pages/profile/profile')
             return
           }
+          this.resetAiPreviewState()
+          this.persistEditingSession()
           openPage('/pages/sell/sell')
         }
       })
@@ -495,8 +565,65 @@ export default {
       }
       return labelMap[label] !== undefined ? labelMap[label] : label
     },
+    buildMaintenanceHistoryView(source) {
+      if (!source || typeof source !== 'object') {
+        return null
+      }
+      const data = source.data && typeof source.data === 'object' ? source.data : {}
+      const timelineItems = Array.isArray(data.keyRecords)
+        ? data.keyRecords.map((item) => ({
+            date: item.date || item.time || item.label || '--',
+            content: [item.content, item.recordNo ? `记录编号${item.recordNo}` : ''].filter(Boolean).join('，')
+          })).filter((item) => item.content)
+        : []
+      const progressItems = []
+      if (data.fourSRatio !== undefined && data.fourSRatio !== null && data.fourSRatio !== '') {
+        progressItems.push({
+          label: '4S店保养占比',
+          value: this.normalizePercentValue(data.fourSRatio),
+          note: data.industryAverage ? `行业平均水平: ${data.industryAverage}` : ''
+        })
+      }
+      const rows = []
+      if (data.totalRecords !== undefined && data.totalRecords !== null && data.totalRecords !== '') {
+        rows.push({
+          label: '维修保养记录',
+          value: `${data.totalRecords}条`
+        })
+      }
+      if (data.accidentRecord) {
+        rows.push({
+          label: '事故记录',
+          value: this.formatDisplayValue(data.accidentRecord)
+        })
+      }
+      const intro = source.summary || source.description || ''
+      return {
+        title: source.title || '维修保养历史',
+        intro,
+        timelineItems,
+        progressItems,
+        rows
+      }
+    },
+    normalizePercentValue(value) {
+      if (typeof value === 'number') {
+        return value <= 1 ? Math.round(value * 100) : Math.round(value)
+      }
+      if (typeof value === 'string') {
+        const normalized = value.trim().replace('%', '')
+        const parsed = Number(normalized)
+        if (!Number.isNaN(parsed)) {
+          return parsed <= 1 ? Math.round(parsed * 100) : Math.round(parsed)
+        }
+      }
+      return value
+    },
     normalizeStructuredBlocks(source) {
       if (!source) {
+        return []
+      }
+      if (this.previewSectionKey === 'maintenanceHistory') {
         return []
       }
       if (typeof source === 'string' || typeof source === 'number' || typeof source === 'boolean') {
@@ -578,6 +705,7 @@ export default {
 .meta-list { margin-top: 20rpx; display: grid; gap: 12rpx; }
 .meta-item { display: flex; justify-content: space-between; gap: 20rpx; padding: 18rpx 20rpx; border-radius: 16rpx; background-color: rgba(255,255,255,0.82); }
 .detail-item { display: grid; grid-template-columns: 168rpx minmax(0, 1fr); align-items: start; column-gap: 20rpx; row-gap: 10rpx; padding: 18rpx 20rpx; border-radius: 16rpx; background-color: rgba(255,255,255,0.82); }
+.detail-item-plain { grid-template-columns: minmax(0, 1fr); background: transparent; padding: 0; border-radius: 0; }
 .meta-label, .meta-value, .detail-key, .detail-value, .detail-note { font-size: 24rpx; line-height: 1.6; }
 .meta-label, .detail-key, .detail-note { color: var(--c-muted); }
 .meta-value, .detail-value { color: var(--c-text); }
@@ -587,16 +715,20 @@ export default {
 .detail-note { display: block; margin-top: 6rpx; }
 .preview-block { margin-top: 28rpx; }
 .hero-block, .report-card { padding: 24rpx; border: 1rpx solid rgba(15,23,42,0.08); border-radius: 20rpx; background: linear-gradient(135deg, rgba(230,240,246,0.92) 0%, #ffffff 100%); }
+.hero-block { padding: 28rpx 30rpx; border: 1rpx solid rgba(31, 93, 139, 0.12); box-shadow: inset 0 1rpx 0 rgba(255,255,255,0.7); background: linear-gradient(135deg, rgba(227, 238, 247, 0.98) 0%, rgba(247, 250, 252, 0.96) 100%); }
 .appearance-image-scroll { width: 100%; margin-top: 18rpx; }
 .appearance-image-row { display: inline-flex; gap: 18rpx; }
 .appearance-image-item { width: 220rpx; flex-shrink: 0; }
 .appearance-image { width: 220rpx; height: 148rpx; border-radius: 18rpx; background: rgba(148,163,184,0.16); }
 .appearance-image-label { display: block; margin-top: 10rpx; font-size: 22rpx; color: var(--c-muted); text-align: center; }
-.appearance-conclusion-text-wrap { margin-top: 22rpx; padding: 20rpx 22rpx; border-radius: 18rpx; background: rgba(255,255,255,0.88); }
+.appearance-conclusion-text-wrap { margin-top: 22rpx; padding: 0; border-radius: 0; background: transparent; }
 .appearance-conclusion-text { font-size: 26rpx; line-height: 1.8; color: var(--c-text); }
+.hero-title { display: block; font-size: 44rpx; line-height: 1.2; letter-spacing: 1rpx; }
 .hero-price { display: block; margin-top: 10rpx; font-size: 42rpx; color: var(--c-primary); font-weight: 700; }
-.hero-confidence { display: block; margin-top: 10rpx; font-size: 24rpx; color: var(--c-text-2); }
+.hero-confidence { display: inline-flex; align-items: center; margin-top: 18rpx; padding: 8rpx 18rpx; border-radius: 999rpx; font-size: 22rpx; color: var(--c-text-2); background: rgba(255,255,255,0.66); }
 .keyword-list { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; }
 .keyword-chip { padding: 10rpx 18rpx; background-color: var(--c-primary-soft); color: var(--c-primary); border-radius: 999rpx; font-size: 24rpx; }
 .detail-list { margin-top: 16rpx; display: grid; gap: 12rpx; }
+.maintenance-panel + .maintenance-panel,
+.maintenance-panel + .maintenance-detail-list { margin-top: 24rpx; }
 </style>

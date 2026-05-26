@@ -1,4 +1,4 @@
-﻿﻿<template>
+﻿<template>
   <view class="container">
     <view class="page-head">
       <view>
@@ -18,7 +18,7 @@
     <view class="sell-form">
       <view class="section section-intro">
         <text class="section-intro-title">基础信息</text>
-        <text class="section-intro-desc">这里填写的标题、图片和描述，会和 AI 生成内容一起保存。支持只发文本、只发图片，或两者一起生成。</text>
+        <text class="section-intro-desc">这里填写的标题、图片和描述，会和 AI 生成内容一起保存。</text>
       </view>
 
       <view class="section">
@@ -52,7 +52,7 @@
         <view class="form-grid">
           <view class="param-card param-card-wide">
             <text class="mini-label">车架号 VIN</text>
-            <input v-model="form.vehicleVin" class="form-input compact" type="text" maxlength="-1" placeholder="选填" placeholder-style="color: #94A3B8;" />
+            <input v-model="form.vehicleVin" class="form-input compact" type="text" maxlength="-1" placeholder="必填" placeholder-style="color: #94A3B8;" />
           </view>
           <view class="param-card">
             <text class="mini-label">车型基础 ID</text>
@@ -332,10 +332,20 @@ export default {
       }
     },
     validateBeforeAi() {
-      const hasText = !!((this.form.title && this.form.title.trim()) || (this.form.description && this.form.description.trim()))
-      const hasImages = this.images.length > 0
-      if (!hasText && !hasImages) {
-        this.showToast('请至少填写标题、描述或上传图片之一')
+      if (!this.form.title) {
+        this.showToast('请输入车辆标题')
+        return false
+      }
+      if (!this.form.description) {
+        this.showToast('请输入卖点描述')
+        return false
+      }
+      if (!this.form.vehicleVin) {
+        this.showToast('请填写车架号 VIN')
+        return false
+      }
+      if (this.images.length === 0) {
+        this.showToast('请至少上传一张图片')
         return false
       }
       if (!this.form.userId) {

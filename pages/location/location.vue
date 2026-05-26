@@ -93,7 +93,8 @@
 
 <script>
 import BottomNav from '../../components/BottomNav.vue'
-import { request } from '../../utils/api'
+import { buildApiUrl, request } from '../../utils/api'
+import { openPage } from '../../utils/navigation'
 import { chooseLocationCompat } from '../../utils/platform'
 
 const DEFAULT_LOCATION = {
@@ -108,6 +109,7 @@ const EMPTY_LOCATION_TEXT = '暂无定位信息'
 const LOCATION_CACHE_KEY = 'currentLocationCache'
 const LOCATION_CACHE_TTL = 30 * 60 * 1000
 const MUNICIPALITIES = ['北京市', '上海市', '天津市', '重庆市']
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800'
 
 export default {
   components: {
@@ -115,36 +117,7 @@ export default {
   },
   data() {
     return {
-      carList: [
-        {
-          id: 1,
-          name: '丰田卡罗拉 2020款 豪华版',
-          price: '12.8',
-          seller: '认证车商',
-          image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400'
-        },
-        {
-          id: 2,
-          name: '本田思域 2019款 220TURBO 劲动版',
-          price: '11.5',
-          seller: '个人卖家',
-          image: 'https://images.unsplash.com/photo-1605816988066-b0a0ce0a166a?w=400'
-        },
-        {
-          id: 3,
-          name: '大众帕萨特 2021款 330TSI 豪华版',
-          price: '16.8',
-          seller: '城市精品车行',
-          image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400'
-        },
-        {
-          id: 4,
-          name: '宝马3系 2020款 325Li M运动套装',
-          price: '28.5',
-          seller: '认证旗舰店',
-          image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400'
-        }
-      ],
+      carList: [],
       province: DEFAULT_LOCATION.province,
       city: DEFAULT_LOCATION.city,
       district: DEFAULT_LOCATION.district,
@@ -173,13 +146,62 @@ export default {
   },
   onShow() {
     this.initLocation()
+    this.fetchPublishedCars()
   },
   methods: {
     viewCarDetail(car) {
-      uni.showToast({
-        title: car.name,
-        icon: 'none'
+      openPage(`/pages/car/detail?reportId=${car.reportId}`)
+    },
+    fetchPublishedCars() {
+      request({
+        url: '/api/ai/report/published/list?limit=20',
+        method: 'GET',
+        success: (res) => {
+          const payload = res.data || {}
+          const list = Array.isArray(payload.data) ? payload.data : []
+          this.carList = list.map((item) => this.mapCarCard(item)).filter((item) => item.reportId)
+        },
+        fail: () => {
+          uni.showToast({
+            title: '车源加载失败',
+            icon: 'none'
+          })
+        }
       })
+    },
+    mapCarCard(item) {
+      const schema = item.aiReportSchema || {}
+      const hero = schema.hero || {}
+      const basicInfo = item.basicInfo || (item.structuredReport && item.structuredReport.basicInfo) || {}
+      const imageList = this.normalizeImageList(item.imageUrls)
+      return {
+        id: item.reportId,
+        reportId: item.reportId,
+        name: item.title || hero.title || basicInfo.vehicleName || '未命名车源',
+        price: this.formatPrice(item.sellerPrice),
+        seller: item.vehicleVin ? `VIN ${String(item.vehicleVin).slice(-6)}` : 'AI检测记录',
+        image: imageList[0] || FALLBACK_IMAGE
+      }
+    },
+    normalizeImageList(images) {
+      if (!Array.isArray(images)) {
+        return []
+      }
+      return images.map((image) => {
+        if (typeof image !== 'string' || !image) {
+          return ''
+        }
+        if (image.startsWith('http') || image.startsWith('blob:') || image.startsWith('data:')) {
+          return image
+        }
+        return buildApiUrl(image)
+      }).filter(Boolean)
+    },
+    formatPrice(value) {
+      if (value === undefined || value === null || value === '') {
+        return '--'
+      }
+      return String(value)
     },
     initLocation() {
       this.userId = this.getCurrentUserId()
