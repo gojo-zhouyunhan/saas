@@ -17,12 +17,8 @@
     </view>
 
     <template v-else-if="report">
-      <view v-if="imageList.length" class="section gallery-section">
-        <swiper class="gallery-swiper" circular autoplay :interval="4000" :duration="350" indicator-dots>
-          <swiper-item v-for="(image, index) in imageList" :key="image + index">
-            <image class="gallery-image" :src="image" mode="aspectFill" />
-          </swiper-item>
-        </swiper>
+      <view v-if="imageList.length" class="section" style="padding: 0">
+        <image :src="imageList[0]" mode="aspectFill" style="width: 100%; height: 560rpx" />
       </view>
 
       <view class="section hero-card">
@@ -30,6 +26,21 @@
         <text v-if="priceText" class="hero-price">{{ priceText }}</text>
         <text v-if="tradeTypeText" class="hero-pill">{{ tradeTypeText }}</text>
         <text v-if="reportSubtitle" class="hero-subtitle">{{ reportSubtitle }}</text>
+      </view>
+
+      <view v-if="imageList.length" class="section">
+        <text class="section-title">车辆图片</text>
+        <scroll-view scroll-x class="image-scroll" show-scrollbar="false">
+          <view class="image-row">
+            <image
+              v-for="(image, index) in imageList"
+              :key="image + index"
+              class="detail-image"
+              :src="image"
+              mode="aspectFill"
+            />
+          </view>
+        </scroll-view>
       </view>
 
       <view v-if="reportSummary" class="section">
@@ -136,14 +147,15 @@
         </view>
       </view>
 
-      <view class="bottom-actions">
-        <view class="hero-actions bottom-actions-inner">
-          <view class="hero-action-button hero-action-primary hero-action-contact" @click="handleContact">
-            <text class="hero-action-text hero-action-text-primary">{{ '\u5728\u7ebf\u8054\u7cfb' }}</text>
-          </view>
-          <view class="hero-action-button hero-action-secondary" @click="toggleFavorite">
-            <uni-icons :type="isFavorite ? 'star-filled' : 'star'" size="30" :color="isFavorite ? 'var(--c-primary)' : 'var(--c-text)'"></uni-icons>
-          </view>
+      <view
+        class="hero-actions"
+        style="position: fixed; left: 24rpx; right: 24rpx; bottom: calc(24rpx + env(safe-area-inset-bottom)); z-index: 240; margin-top: 0"
+      >
+        <view class="hero-action-button hero-action-primary" @click="handleContact">
+          <text class="hero-action-text hero-action-text-primary">{{ '\u5728\u7ebf\u8054\u7cfb' }}</text>
+        </view>
+        <view class="hero-action-button hero-action-secondary" @click="toggleFavorite">
+          <text class="hero-action-text hero-action-text-secondary">{{ isFavorite ? '\u5df2\u6536\u85cf' : '\u6536\u85cf' }}</text>
         </view>
       </view>
     </template>
@@ -153,7 +165,6 @@
 <script>
 import { buildApiUrl, request } from '../../utils/api'
 import { goBackOrFallback, openPage } from '../../utils/navigation'
-import { getBackendFieldLabel, getBackendSectionLabel } from '../../utils/field-label'
 import Timeline from '../../components/report/Timeline.vue'
 import ProgressBar from '../../components/report/ProgressBar.vue'
 
@@ -413,7 +424,13 @@ export default {
       return []
     },
     normalizeBasicInfoLabel(label) {
-      return getBackendFieldLabel(label)
+      const labelMap = {
+        vehicleName: '车辆名称',
+        tradeType: '交易类型',
+        otherInfo: '其余基础信息',
+        vin: 'VIN'
+      }
+      return labelMap[label] !== undefined ? labelMap[label] : label
     },
     buildMaintenanceHistoryView(source) {
       if (!source || typeof source !== 'object') {
@@ -496,12 +513,8 @@ export default {
           blocks.push({ title: this.formatStructuredLabel(key), rows: this.normalizeBasicInfoRows(rawValue) })
           return
         }
-        const label = this.formatStructuredLabel(key)
-        if (!label) {
-          return
-        }
         rows.push({
-          label,
+          label: this.formatStructuredLabel(key),
           value: this.formatDisplayValue(rawValue && rawValue.value !== undefined ? rawValue.value : rawValue, rawValue && rawValue.unit),
           note: rawValue && rawValue.note ? rawValue.note : ''
         })
@@ -512,7 +525,14 @@ export default {
       return blocks
     },
     formatStructuredLabel(key) {
-      return getBackendSectionLabel(key)
+      const labelMap = {
+        vehicleOverview: '车身概览',
+        paintCondition: '漆面状况',
+        bodyGlassParts: '车身玻璃与覆盖件',
+        tiresWheels: '轮胎轮毂',
+        conclusion: '结论'
+      }
+      return labelMap[key] || key
     }
   }
 }
@@ -521,7 +541,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  padding-bottom: 170rpx;
+  padding-bottom: 80rpx;
   background: linear-gradient(180deg, #f3f7fb 0%, #edf3f8 100%);
 }
 
@@ -570,22 +590,6 @@ export default {
   background: linear-gradient(135deg, rgba(227, 238, 247, 0.98) 0%, rgba(247, 250, 252, 0.96) 100%);
 }
 
-.gallery-section {
-  padding: 0;
-  overflow: hidden;
-}
-
-.gallery-swiper {
-  width: 100%;
-  height: 520rpx;
-}
-
-.gallery-image {
-  width: 100%;
-  height: 100%;
-  background: rgba(148, 163, 184, 0.16);
-}
-
 .hero-title,
 .section-title,
 .block-title {
@@ -625,21 +629,6 @@ export default {
   flex-wrap: wrap;
 }
 
-.bottom-actions {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 18rpx 24rpx calc(18rpx + env(safe-area-inset-bottom));
-  background: rgba(243, 247, 251, 0.96);
-  box-shadow: 0 -10rpx 28rpx rgba(15, 23, 42, 0.08);
-}
-
-.bottom-actions-inner {
-  margin-top: 0;
-  justify-content: center;
-}
-
 .hero-action-button {
   min-width: 180rpx;
   padding: 16rpx 26rpx;
@@ -653,15 +642,6 @@ export default {
 .hero-action-primary {
   background: var(--c-primary);
   box-shadow: 0 10rpx 24rpx rgba(15, 118, 110, 0.22);
-}
-
-.hero-action-contact {
-  min-width: 260rpx;
-  padding: 22rpx 42rpx;
-}
-
-.hero-action-contact .hero-action-text {
-  font-size: 28rpx;
 }
 
 .hero-action-secondary {

@@ -138,11 +138,11 @@
 
       <view class="bottom-actions">
         <view class="hero-actions bottom-actions-inner">
-          <view class="hero-action-button hero-action-primary hero-action-contact" @click="handleContact">
+          <view class="hero-action-button hero-action-primary" @click="handleContact">
             <text class="hero-action-text hero-action-text-primary">{{ '\u5728\u7ebf\u8054\u7cfb' }}</text>
           </view>
           <view class="hero-action-button hero-action-secondary" @click="toggleFavorite">
-            <uni-icons :type="isFavorite ? 'star-filled' : 'star'" size="30" :color="isFavorite ? 'var(--c-primary)' : 'var(--c-text)'"></uni-icons>
+            <text class="hero-action-text hero-action-text-secondary">{{ isFavorite ? '\u5df2\u6536\u85cf' : '\u6536\u85cf' }}</text>
           </view>
         </view>
       </view>
@@ -153,7 +153,6 @@
 <script>
 import { buildApiUrl, request } from '../../utils/api'
 import { goBackOrFallback, openPage } from '../../utils/navigation'
-import { getBackendFieldLabel, getBackendSectionLabel } from '../../utils/field-label'
 import Timeline from '../../components/report/Timeline.vue'
 import ProgressBar from '../../components/report/ProgressBar.vue'
 
@@ -413,7 +412,13 @@ export default {
       return []
     },
     normalizeBasicInfoLabel(label) {
-      return getBackendFieldLabel(label)
+      const labelMap = {
+        vehicleName: '车辆名称',
+        tradeType: '交易类型',
+        otherInfo: '其余基础信息',
+        vin: 'VIN'
+      }
+      return labelMap[label] !== undefined ? labelMap[label] : label
     },
     buildMaintenanceHistoryView(source) {
       if (!source || typeof source !== 'object') {
@@ -496,12 +501,8 @@ export default {
           blocks.push({ title: this.formatStructuredLabel(key), rows: this.normalizeBasicInfoRows(rawValue) })
           return
         }
-        const label = this.formatStructuredLabel(key)
-        if (!label) {
-          return
-        }
         rows.push({
-          label,
+          label: this.formatStructuredLabel(key),
           value: this.formatDisplayValue(rawValue && rawValue.value !== undefined ? rawValue.value : rawValue, rawValue && rawValue.unit),
           note: rawValue && rawValue.note ? rawValue.note : ''
         })
@@ -512,7 +513,14 @@ export default {
       return blocks
     },
     formatStructuredLabel(key) {
-      return getBackendSectionLabel(key)
+      const labelMap = {
+        vehicleOverview: '车身概览',
+        paintCondition: '漆面状况',
+        bodyGlassParts: '车身玻璃与覆盖件',
+        tiresWheels: '轮胎轮毂',
+        conclusion: '结论'
+      }
+      return labelMap[key] || key
     }
   }
 }
@@ -653,15 +661,6 @@ export default {
 .hero-action-primary {
   background: var(--c-primary);
   box-shadow: 0 10rpx 24rpx rgba(15, 118, 110, 0.22);
-}
-
-.hero-action-contact {
-  min-width: 260rpx;
-  padding: 22rpx 42rpx;
-}
-
-.hero-action-contact .hero-action-text {
-  font-size: 28rpx;
 }
 
 .hero-action-secondary {
