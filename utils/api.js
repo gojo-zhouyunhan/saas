@@ -108,3 +108,29 @@ export function request(options) {
     }
   })
 }
+
+export function uploadFile(options) {
+  const { url, header = {}, success, complete, ...rest } = options
+  const requestHeader = { ...header }
+  const token = uni.getStorageSync(TOKEN_KEY)
+
+  if (token && !isAuthFreeUrl(url)) {
+    requestHeader.Authorization = `Bearer ${token}`
+  }
+
+  return uni.uploadFile({
+    url: buildApiUrl(url),
+    header: requestHeader,
+    ...rest,
+    success: (res) => {
+      if (typeof success === 'function') {
+        success(res)
+      }
+    },
+    complete: (res) => {
+      if (typeof complete === 'function') {
+        complete(res)
+      }
+    }
+  })
+}
