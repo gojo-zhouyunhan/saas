@@ -91,7 +91,6 @@ const UI_LABEL_MAP = {
   deleteFailed: '\u5220\u9664\u5931\u8d25',
   unnamedDraft: '\u672a\u547d\u540d\u8349\u7a3f',
   noDescription: '\u6682\u65e0\u63cf\u8ff0',
-  noImage: '\u6682\u65e0\u56fe\u7247',
   noVin: '\u65e0 VIN',
   onlineTrade: '\u7ebf\u4e0a\u6c9f\u901a',
   offlineTrade: '\u7ebf\u4e0b\u770b\u8f66',

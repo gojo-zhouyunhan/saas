@@ -208,7 +208,7 @@
 </template>
 
 <script>
-const API_BASE_URL = 'http://localhost:9090'
+const API_BASE_URL = 'http://192.168.1.133:9090'
 
 export default {
   data() {

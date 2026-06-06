@@ -115,7 +115,7 @@ export default {
       
       // 发送验证码请求
       uni.request({
-        url: `http://localhost:8081/api/usedcar/sendcode?phone=${this.form.phone}`,
+        url: `http://192.168.1.133:8081/api/usedcar/sendcode?phone=${this.form.phone}`,
         method: 'GET',
         success: (res) => {
           if (res.statusCode === 200 && res.data.code === 200) {

@@ -251,7 +251,7 @@ export default {
       }
 
       uni.request({
-        url: "http://localhost:9090/api/user/save-location",
+        url: "http://192.168.1.133:9090/api/user/save-location",
         method: "POST",
         data: {
           userId: this.userId,

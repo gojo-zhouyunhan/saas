@@ -4,7 +4,7 @@
       "path": "pages/index/index",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "首页",
+        "navigationBarTitleText": "Home",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -14,7 +14,7 @@
       "path": "pages/location/location",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "同城",
+        "navigationBarTitleText": "City",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -24,7 +24,7 @@
       "path": "pages/sell/sell",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "发布",
+        "navigationBarTitleText": "Sell",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -34,7 +34,7 @@
       "path": "pages/sell/ai-preview",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "AI预览",
+        "navigationBarTitleText": "AI Preview",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -44,7 +44,7 @@
       "path": "pages/sell/publish-settings",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "发布设置",
+        "navigationBarTitleText": "Publish",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -54,7 +54,7 @@
       "path": "pages/car/detail",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "车辆详情",
+        "navigationBarTitleText": "Car Detail",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -64,7 +64,7 @@
       "path": "pages/report-layout/report-layout",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "检测报告布局",
+        "navigationBarTitleText": "Report",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -74,7 +74,7 @@
       "path": "pages/message/message",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "消息",
+        "navigationBarTitleText": "Messages",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -84,7 +84,7 @@
       "path": "pages/profile/profile",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "我的",
+        "navigationBarTitleText": "\u6211\u7684",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -94,7 +94,17 @@
       "path": "pages/profile/drafts",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "草稿箱",
+        "navigationBarTitleText": "Drafts",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/my-cars",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "My Cars",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -104,7 +114,47 @@
       "path": "pages/profile/orders",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "我的订单",
+        "navigationBarTitleText": "Orders",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/recharge",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "\u8d26\u6237\u5145\u503c",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/recharge-pay",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "\u6a21\u62df\u652f\u4ed8",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/member-upgrade",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "\u4f1a\u5458\u5347\u7ea7",
+        "navigationBarBackgroundColor": "#2F3135",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#F3F4F6"
+      }
+    },
+    {
+      "path": "pages/profile/member-pay",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "\u4f1a\u5458\u652f\u4ed8",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -113,7 +163,7 @@
     {
       "path": "pages/login/login",
       "style": {
-        "navigationBarTitleText": "登录",
+        "navigationBarTitleText": "Login",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -122,7 +172,7 @@
     {
       "path": "pages/login/phonelogin",
       "style": {
-        "navigationBarTitleText": "验证码登录",
+        "navigationBarTitleText": "Phone Login",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -131,7 +181,7 @@
     {
       "path": "pages/register/register",
       "style": {
-        "navigationBarTitleText": "注册",
+        "navigationBarTitleText": "Register",
         "navigationBarBackgroundColor": "#2F3135",
         "navigationBarTextStyle": "white",
         "backgroundColor": "#F3F4F6"
@@ -140,7 +190,7 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "white",
-    "navigationBarTitleText": "二手车交易平台",
+    "navigationBarTitleText": "Used Car",
     "navigationBarBackgroundColor": "#2F3135",
     "backgroundColor": "#F3F4F6",
     "app-plus": {
@@ -156,7 +206,7 @@
     "usingComponents": true,
     "permission": {
       "scope.userLocation": {
-        "desc": "您的位置信息将用于定位附近车源与地图选点功能展示"
+        "desc": "Location is used to show nearby vehicle sources and map selection."
       }
     }
   }

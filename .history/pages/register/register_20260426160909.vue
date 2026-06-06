@@ -192,7 +192,7 @@ export default {
       
       // 发送验证码请求
       uni.request({
-        url: `http://localhost:9090/api/user/sendcode?phone=${this.formData.phone}&scene=register`,
+        url: `http://192.168.1.133:9090/api/user/sendcode?phone=${this.formData.phone}&scene=register`,
         method: 'GET',
         success: (res) => {
           if (res.statusCode === 200 && res.data.code === 200) {
@@ -281,7 +281,7 @@ export default {
       
       // 发送注册请求
       uni.request({
-        url: 'http://localhost:9090/api/user/register',
+        url: 'http://192.168.1.133:9090/api/user/register',
         method: 'POST',
         data: registerData,
         success: (res) => {

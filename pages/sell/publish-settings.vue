@@ -94,28 +94,97 @@ export default {
         updatedAt: new Date().toISOString()
       })
     },
+    isTemporaryImageUrl(image) {
+      if (typeof image !== 'string') {
+        return false
+      }
+      const value = image.trim().toLowerCase()
+      return value.startsWith('blob:') ||
+        value.startsWith('data:') ||
+        value.startsWith('file:') ||
+        value.startsWith('wxfile:') ||
+        value.startsWith('http://tmp') ||
+        value.startsWith('https://tmp') ||
+        value.includes('/tmp/') ||
+        value.includes('/temp/')
+    },
+    isPersistedImageUrl(image) {
+      if (typeof image !== 'string') {
+        return false
+      }
+      const value = image.trim()
+      if (!value) {
+        return false
+      }
+      if (value.startsWith('/upload/')) {
+        return true
+      }
+      return /^https?:\/\//.test(value) && !this.isTemporaryImageUrl(value)
+    },
     getRemoteImageUrls() {
-      return this.images.filter((image) => /^https?:\/\//.test(image))
+      return this.images.filter((image) => this.isPersistedImageUrl(image))
+    },
+    uploadImage(filePath) {
+      return new Promise((resolve, reject) => {
+        uni.uploadFile({
+          url: buildApiUrl('/api/ai/report/upload-sell-image'),
+          filePath,
+          name: 'image',
+          header: this.buildAuthHeader(),
+          success: (res) => {
+            try {
+              const payload = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || {})
+              const uploadedUrl = payload.data && (payload.data.imageUrl || payload.data.url)
+              if (payload.code !== 200 || !uploadedUrl) {
+                reject(new Error(payload.message || '图片上传失败'))
+                return
+              }
+              resolve(uploadedUrl)
+            } catch (error) {
+              reject(error)
+            }
+          },
+          fail: reject
+        })
+      })
+    },
+    async ensureImagesUploaded() {
+      const remoteImages = this.getRemoteImageUrls()
+      const localImages = this.images.filter((image) => !this.isPersistedImageUrl(image))
+      if (!localImages.length) {
+        return remoteImages
+      }
+      const uploadedImages = []
+      for (const filePath of localImages) {
+        const imageUrl = await this.uploadImage(filePath)
+        uploadedImages.push(imageUrl)
+      }
+      this.images = remoteImages.concat(uploadedImages)
+      this.persistSession()
+      return this.images.slice()
     },
     backToPreview() {
       this.persistSession()
       openPage('/pages/sell/ai-preview')
     },
+    hasValue(value) {
+      return value !== undefined && value !== null && String(value).trim() !== ''
+    },
     validateBeforePublish() {
-      if (!this.form.title) {
-        this.showToast('请输入车辆标题')
-        return false
-      }
-      if (!this.form.description) {
-        this.showToast('请输入卖点描述')
-        return false
-      }
-      if (!this.form.price) {
-        this.showToast('请输入售价')
-        return false
-      }
-      if (this.images.length === 0) {
-        this.showToast('请至少上传一张图片')
+      const requiredRules = [
+        { valid: this.images.length > 0, message: '请至少上传一张车辆图片' },
+        { valid: this.hasValue(this.form.title), message: '请输入车辆标题' },
+        { valid: this.hasValue(this.form.vehicleVin), message: '请输入车架号 VIN' },
+        { valid: this.hasValue(this.form.licensePlate), message: '请输入车牌号' },
+        { valid: this.hasValue(this.form.mileage), message: '请输入表显里程' },
+        { valid: this.hasValue(this.form.sourceProvince) && this.hasValue(this.form.sourceCity) && this.hasValue(this.form.sourceDistrict), message: '请选择车源省市区' },
+        { valid: this.hasValue(this.form.sourceDetailAddress), message: '请输入车源详细地址' },
+        { valid: this.hasValue(this.form.description), message: '请输入卖点描述' },
+        { valid: this.hasValue(this.form.price), message: '请输入售价' }
+      ]
+      const missing = requiredRules.find((item) => !item.valid)
+      if (missing) {
+        this.showToast(missing.message)
         return false
       }
       if (!this.aiPreview) {
@@ -124,11 +193,32 @@ export default {
       }
       return true
     },
-    publishNow() {
+    parseResponseData(data) {
+      if (!data) {
+        return {}
+      }
+      if (typeof data === 'string') {
+        try {
+          return JSON.parse(data)
+        } catch (error) {
+          return {}
+        }
+      }
+      return data
+    },
+    async publishNow() {
       if (this.publishLoading || !this.validateBeforePublish()) {
         return
       }
       this.publishLoading = true
+      let imageUrls = []
+      try {
+        imageUrls = await this.ensureImagesUploaded()
+      } catch (error) {
+        this.publishLoading = false
+        this.showToast((error && error.message) || '图片上传失败')
+        return
+      }
       const payload = {
         draftId: this.form.draftId || undefined,
         reportId: this.form.reportId || this.aiMeta.reportId || undefined,
@@ -141,7 +231,11 @@ export default {
         vehicleBaseId: this.form.vehicleBaseId ? Number(this.form.vehicleBaseId) : undefined,
         licensePlate: this.form.licensePlate,
         mileage: this.form.mileage ? Number(this.form.mileage) : undefined,
-        imageUrls: this.getRemoteImageUrls(),
+        sourceProvince: this.form.sourceProvince,
+        sourceCity: this.form.sourceCity,
+        sourceDistrict: this.form.sourceDistrict,
+        sourceDetailAddress: this.form.sourceDetailAddress,
+        imageUrls,
         aiReportSchema: this.aiPreview,
         structuredReport: this.aiPreview.structuredReport || undefined,
         aiPrompt: this.aiMeta.prompt,
@@ -154,20 +248,45 @@ export default {
         data: payload,
         success: (res) => {
           this.publishLoading = false
-          const result = res.data || {}
-          if (result.code !== 200) {
+          const result = this.parseResponseData(res && res.data)
+          const report = result.data || {}
+          const httpOk = !res.statusCode || (res.statusCode >= 200 && res.statusCode < 300)
+          const statusOk = report.status === undefined || report.status === null || Number(report.status) === 2
+          const published = httpOk && result.code === 200 && statusOk
+          if (!published) {
             this.showToast(result.message || '发布失败')
             return
           }
+          this.form.reportId = report.reportId || this.form.reportId
+          this.aiMeta.reportId = report.reportId || this.aiMeta.reportId
+          this.persistSession()
           clearSellSession()
           uni.showToast({ title: '发布成功', icon: 'success' })
-          setTimeout(() => {
-            openPage('/pages/index/index')
-          }, 600)
+          this.goHomeAfterPublish()
         },
         fail: () => {
           this.publishLoading = false
           this.showToast('发布失败，请稍后重试')
+        }
+      })
+    },
+    goHomeAfterPublish() {
+      // #ifdef H5
+      if (typeof window !== 'undefined') {
+        const target = `${window.location.origin}${window.location.pathname}#/pages/index/index`
+        window.location.replace(target)
+        return
+      }
+      // #endif
+      uni.reLaunch({
+        url: '/pages/index/index',
+        fail: () => {
+          uni.redirectTo({
+            url: '/pages/index/index',
+            fail: () => {
+              openPage('/pages/index/index')
+            }
+          })
         }
       })
     },
@@ -177,9 +296,16 @@ export default {
         content: '当前还没正式发布，是否先存入草稿箱？',
         confirmText: '存草稿',
         cancelText: '返回上页',
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm) {
             this.persistSession()
+            let imageUrls = []
+            try {
+              imageUrls = await this.ensureImagesUploaded()
+            } catch (error) {
+              this.showToast((error && error.message) || '图片上传失败')
+              return
+            }
             uni.request({
               url: buildApiUrl('/api/sell/draft/save'),
               method: 'POST',
@@ -196,7 +322,11 @@ export default {
                 vehicleBaseId: this.form.vehicleBaseId ? Number(this.form.vehicleBaseId) : undefined,
                 licensePlate: this.form.licensePlate,
                 mileage: this.form.mileage ? Number(this.form.mileage) : undefined,
-                imageUrls: this.getRemoteImageUrls(),
+                sourceProvince: this.form.sourceProvince,
+                sourceCity: this.form.sourceCity,
+                sourceDistrict: this.form.sourceDistrict,
+                sourceDetailAddress: this.form.sourceDetailAddress,
+                imageUrls,
                 aiReportSchema: this.aiPreview,
                 structuredReport: this.aiPreview && this.aiPreview.structuredReport ? this.aiPreview.structuredReport : undefined,
                 aiPrompt: this.aiMeta.prompt,
